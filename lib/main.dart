@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:firebase_core/firebase_core.dart';
 
-// ⭐ Import đúng các trang// CHẠY ĐẦU TIÊN
-import 'auth/login_page.dart';
+import 'firebase_options.dart'; // ⭐ File auto tạo sau khi chạy flutterfire configure
+import 'auth/login_page.dart'; // ⭐ Trang login của em
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // ⭐ KHỞI TẠO FIREBASE
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
   runApp(const MyApp());
 }
 
