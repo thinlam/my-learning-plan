@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 // ⭐ Import đúng các trang// CHẠY ĐẦU TIÊN
-import 'screen/survey/survey_page.dart';
-import '../screen/home/page/navigation_page.dart';
 import 'auth/login_page.dart';
 
 void main() {
