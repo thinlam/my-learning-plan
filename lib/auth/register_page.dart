@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+
+// Firebase
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 import 'login_page.dart';
 
 class RegisterPage extends StatefulWidget {
@@ -17,12 +22,59 @@ class _RegisterPageState extends State<RegisterPage> {
 
   bool obscure1 = true;
   bool obscure2 = true;
+  bool isLoading = false;
 
-  void _register() {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => const LoginPage()),
-    );
+  // ===========================
+  //      REGISTER FUNCTION
+  // ===========================
+  Future<void> _register() async {
+    if (name.text.trim().isEmpty ||
+        email.text.trim().isEmpty ||
+        password.text.trim().isEmpty) {
+      _showMessage("Vui lòng nhập đầy đủ thông tin");
+      return;
+    }
+
+    if (password.text != confirm.text) {
+      _showMessage("Mật khẩu xác nhận không trùng khớp");
+      return;
+    }
+
+    try {
+      setState(() => isLoading = true);
+
+      // 1. Tạo tài khoản Firebase Auth
+      UserCredential userCredential = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(
+            email: email.text.trim(),
+            password: password.text.trim(),
+          );
+
+      final uid = userCredential.user!.uid;
+
+      // 2. Lưu thông tin user lên Firestore
+      await FirebaseFirestore.instance.collection("Users").doc(uid).set({
+        "name": name.text.trim(),
+        "email": email.text.trim(),
+        "createdAt": DateTime.now(),
+      });
+
+      _showMessage("Tạo tài khoản thành công!");
+
+      // 3. Điều hướng về Login Page
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginPage()),
+      );
+    } on FirebaseAuthException catch (e) {
+      _showMessage(e.message ?? "Đã xảy ra lỗi không xác định");
+    } finally {
+      setState(() => isLoading = false);
+    }
+  }
+
+  void _showMessage(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
   @override
@@ -115,7 +167,7 @@ class _RegisterPageState extends State<RegisterPage> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: _register,
+                onPressed: isLoading ? null : _register,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.teal,
                   padding: const EdgeInsets.symmetric(vertical: 16),
@@ -123,10 +175,12 @@ class _RegisterPageState extends State<RegisterPage> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Text(
-                  "Đăng ký",
-                  style: TextStyle(color: Colors.white, fontSize: 16),
-                ),
+                child: isLoading
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text(
+                        "Đăng ký",
+                        style: TextStyle(color: Colors.white, fontSize: 16),
+                      ),
               ),
             ),
           ],
