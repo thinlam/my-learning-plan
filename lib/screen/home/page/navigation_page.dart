@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 // Import các màn hình trong app
 import 'home_page.dart';
-import 'notifications_page.dart' hide NotificationsPage;
 import 'profile_page.dart';
 
 // ⭐ Import Learning Path

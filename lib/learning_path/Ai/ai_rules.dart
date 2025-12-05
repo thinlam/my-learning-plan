@@ -144,10 +144,11 @@ class AiRules {
     // 4️⃣ Lịch học rảnh
     if (profile.freeEveningsPerWeek <= 2) {
       // rảnh ít
-      if (path.recommendedHoursPerWeek <= 5)
+      if (path.recommendedHoursPerWeek <= 5) {
         score += 12;
-      else
+      } else {
         score -= 6;
+      }
     } else if (profile.freeEveningsPerWeek >= 4) {
       // rảnh nhiều
       if (path.recommendedHoursPerWeek >= 6) score += 8;
@@ -155,10 +156,11 @@ class AiRules {
 
     // 5️⃣ Có học thêm?
     if (profile.hasExtraClasses) {
-      if (path.recommendedHoursPerWeek <= 7)
+      if (path.recommendedHoursPerWeek <= 7) {
         score += 8;
-      else
+      } else {
         score -= 6;
+      }
     }
 
     // Điểm tối thiểu 0, tối đa 100+
