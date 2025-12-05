@@ -161,6 +161,45 @@ B10: Nếu lỗi pubspec.yaml bị sai formatting
 - flutter pub get
 
 
+# firebase
+
+B1: Cài FlutterFire CLI
+- dart pub global activate flutterfire_cli
+B2: PATH 
+- vào folder theo đường dẫn này "C:\Users\<TênUser>\AppData\Local\Pub\Cache\bin"
+- copy đường dẫn như trên -> edit the sysem ....
+B3: CÀI DỮ LIỆU 
+- Vào lại visual xanh 
+- flutter pub get 
+- cài flutterfire configure : BÊN DƯỚI MỚI LÀ PHẦN QUAN TRỌNG
+
+Tool đang yêu cầu em chọn platform để generate file firebase_options.dart:
+
+? Which platforms should your configuration support?
+  android
+  ios
+  macos
+  web
+  windows
+
+
+👉 Em phải dùng phím SPACE để tick chọn các platform em muốn build.
+
+GỢI Ý CHỌN NHƯ SAU:
+
+✔ android
+✔ ios
+✔ web
+✔ windows
+
+(macOS nếu không dùng thì bỏ)
+
+Sau đó bấm:
+
+👉 ENTER
+- Cài xong -> sẽ có lib/firebase_options.dart
+
+
 
 
 
