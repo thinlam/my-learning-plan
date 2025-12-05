@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+// Firebase
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:my_learning_plan/screen/admin/admin_dashboard.dart';
+
+// Pages
 import 'register_page.dart';
 import '../auth/forgot_password.dart';
 import '../screen/survey/survey_page.dart';
+import '../screen/admin/admin_dashboard.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -95,8 +102,8 @@ class _LoginPageState extends State<LoginPage>
     );
   }
 
+  // 🔥 LOGIN FIREBASE + PHÂN QUYỀN
   Future<void> _login() async {
-    // Validate demo
     if (email.text.trim().isEmpty || password.text.isEmpty) {
       _showMessage('Vui lòng nhập đầy đủ Email và Mật khẩu');
       return;
@@ -104,39 +111,74 @@ class _LoginPageState extends State<LoginPage>
 
     setState(() => isLoading = true);
 
-    // Giả lập delay login
-    await Future.delayed(const Duration(milliseconds: 800));
+    try {
+      // 1) Đăng nhập Firebase Auth
+      final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: email.text.trim(),
+        password: password.text.trim(),
+      );
 
-    if (!mounted) return;
+      final uid = credential.user!.uid;
 
-    setState(() => isLoading = false);
+      // 2) Lấy role từ Firestore
+      final userDoc = await FirebaseFirestore.instance
+          .collection('Users')
+          .doc(uid)
+          .get();
 
-    // Hiệu ứng chuyển trang: fade + slide lên nhẹ
-    Navigator.pushReplacement(
-      context,
-      PageRouteBuilder(
-        transitionDuration: const Duration(milliseconds: 600),
-        pageBuilder: (context, animation, secondaryAnimation) =>
-            const SurveyPage(),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          final curved = CurvedAnimation(
-            parent: animation,
-            curve: Curves.easeOutCubic,
-          );
+      if (!userDoc.exists) {
+        setState(() => isLoading = false);
+        _showMessage("Tài khoản chưa có dữ liệu trong Firestore!");
+        return;
+      }
 
-          return FadeTransition(
-            opacity: curved,
-            child: SlideTransition(
-              position: Tween<Offset>(
-                begin: const Offset(0, 0.08),
-                end: Offset.zero,
-              ).animate(curved),
-              child: child,
-            ),
-          );
-        },
-      ),
-    );
+      final role = userDoc.data()?['role'] ?? "user";
+
+      setState(() => isLoading = false);
+
+      // 3) Điều hướng
+      Widget nextPage = role == "admin"
+          ? const AdminDashboard()
+          : const SurveyPage();
+
+      Navigator.pushReplacement(
+        context,
+        PageRouteBuilder(
+          transitionDuration: const Duration(milliseconds: 600),
+          pageBuilder: (_, animation, __) => nextPage,
+          transitionsBuilder: (_, animation, __, child) {
+            final curved = CurvedAnimation(
+              parent: animation,
+              curve: Curves.easeOutCubic,
+            );
+
+            return FadeTransition(
+              opacity: curved,
+              child: SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(0, 0.08),
+                  end: Offset.zero,
+                ).animate(curved),
+                child: child,
+              ),
+            );
+          },
+        ),
+      );
+    } on FirebaseAuthException catch (e) {
+      setState(() => isLoading = false);
+
+      if (e.code == 'user-not-found') {
+        _showMessage("Email không tồn tại");
+      } else if (e.code == 'wrong-password') {
+        _showMessage("Sai mật khẩu");
+      } else {
+        _showMessage("Lỗi đăng nhập: ${e.message}");
+      }
+    } catch (e) {
+      setState(() => isLoading = false);
+      _showMessage("Có lỗi xảy ra: $e");
+    }
   }
 
   @override
@@ -165,18 +207,23 @@ class _LoginPageState extends State<LoginPage>
               Positioned(
                 top: -80 * (1 - _bgPulse.value),
                 left: -40,
+                // ignore: deprecated_member_use
                 child: _blurCircle(160, Colors.teal.withOpacity(0.25)),
               ),
+
               // Bubble 2
               Positioned(
                 top: size.height * 0.28,
                 right: -50 * (1 - _bgPulse.value),
+                // ignore: deprecated_member_use
                 child: _blurCircle(140, Colors.blue.withOpacity(0.18)),
               ),
+
               // Bubble 3
               Positioned(
                 bottom: -60,
                 left: size.width * 0.3,
+                // ignore: deprecated_member_use
                 child: _blurCircle(120, Colors.tealAccent.withOpacity(0.18)),
               ),
 
@@ -191,7 +238,6 @@ class _LoginPageState extends State<LoginPage>
                     children: [
                       const SizedBox(height: 14),
 
-                      // Header: Icon + text (fade)
                       FadeTransition(
                         opacity: _headerFade,
                         child: Column(
@@ -203,6 +249,7 @@ class _LoginPageState extends State<LoginPage>
                                 color: Colors.white,
                                 boxShadow: [
                                   BoxShadow(
+                                    // ignore: deprecated_member_use
                                     color: Colors.black.withOpacity(0.08),
                                     blurRadius: 18,
                                     offset: const Offset(0, 10),
@@ -239,7 +286,6 @@ class _LoginPageState extends State<LoginPage>
 
                       const SizedBox(height: 26),
 
-                      // Card form: fade + slide
                       FadeTransition(
                         opacity: _cardFade,
                         child: SlideTransition(
@@ -252,6 +298,7 @@ class _LoginPageState extends State<LoginPage>
                               borderRadius: BorderRadius.circular(20),
                               boxShadow: [
                                 BoxShadow(
+                                  // ignore: deprecated_member_use
                                   color: Colors.black.withOpacity(0.08),
                                   blurRadius: 24,
                                   offset: const Offset(0, 14),
@@ -260,7 +307,6 @@ class _LoginPageState extends State<LoginPage>
                             ),
                             child: Column(
                               children: [
-                                // Email
                                 Align(
                                   alignment: Alignment.centerLeft,
                                   child: Text(
@@ -272,7 +318,9 @@ class _LoginPageState extends State<LoginPage>
                                     ),
                                   ),
                                 ),
+
                                 const SizedBox(height: 6),
+
                                 TextField(
                                   controller: email,
                                   keyboardType: TextInputType.emailAddress,
@@ -301,7 +349,6 @@ class _LoginPageState extends State<LoginPage>
 
                                 const SizedBox(height: 16),
 
-                                // Password
                                 Align(
                                   alignment: Alignment.centerLeft,
                                   child: Text(
@@ -313,7 +360,9 @@ class _LoginPageState extends State<LoginPage>
                                     ),
                                   ),
                                 ),
+
                                 const SizedBox(height: 6),
+
                                 TextField(
                                   controller: password,
                                   obscureText: obscure,
@@ -352,13 +401,11 @@ class _LoginPageState extends State<LoginPage>
 
                                 const SizedBox(height: 8),
 
-                                // Forget password
                                 Align(
                                   alignment: Alignment.centerRight,
                                   child: TextButton(
                                     style: TextButton.styleFrom(
                                       padding: EdgeInsets.zero,
-                                      visualDensity: VisualDensity.compact,
                                     ),
                                     onPressed: () => Navigator.push(
                                       context,
@@ -380,7 +427,6 @@ class _LoginPageState extends State<LoginPage>
 
                                 const SizedBox(height: 10),
 
-                                // Login button với animation scale + loading
                                 ScaleTransition(
                                   scale: _buttonScale,
                                   child: SizedBox(
@@ -430,7 +476,6 @@ class _LoginPageState extends State<LoginPage>
 
                       const SizedBox(height: 20),
 
-                      // Register link
                       FadeTransition(
                         opacity: _cardFade,
                         child: Row(
@@ -471,7 +516,7 @@ class _LoginPageState extends State<LoginPage>
     );
   }
 
-  // Widget tạo bubble blur
+  // Bubble UI
   Widget _blurCircle(double size, Color color) {
     return Container(
       width: size,
