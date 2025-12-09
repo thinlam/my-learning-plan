@@ -25,7 +25,7 @@ class _RegisterPageState extends State<RegisterPage> {
   bool isLoading = false;
 
   // ===========================
-  //      REGISTER FUNCTION
+  //        REGISTER
   // ===========================
   Future<void> _register() async {
     if (name.text.trim().isEmpty ||
@@ -52,16 +52,18 @@ class _RegisterPageState extends State<RegisterPage> {
 
       final uid = userCredential.user!.uid;
 
-      // 2. Lưu thông tin user lên Firestore
+      // 2. Lưu thông tin user vào Firestore
       await FirebaseFirestore.instance.collection("Users").doc(uid).set({
         "name": name.text.trim(),
         "email": email.text.trim(),
-        "createdAt": DateTime.now(),
+        "role": "user", // 🔥 phân quyền mặc định user
+        "surveyCompleted": false, // 🔥 user mới CHƯA khảo sát
+        "createdAt": FieldValue.serverTimestamp(),
       });
 
-      _showMessage("Tạo tài khoản thành công!");
+      _showMessage("Tạo tài khoản thành công!", color: Colors.teal);
 
-      // 3. Điều hướng về Login Page
+      // 3. Điều hướng → Login
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const LoginPage()),
@@ -73,8 +75,10 @@ class _RegisterPageState extends State<RegisterPage> {
     }
   }
 
-  void _showMessage(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+  void _showMessage(String msg, {Color color = Colors.red}) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(msg), backgroundColor: color));
   }
 
   @override
