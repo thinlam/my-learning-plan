@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-// import file widgets
+// Firebase
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -16,6 +18,8 @@ class _HomeScreenState extends State<HomeScreen>
   late Animation<double> _fade;
   late Animation<double> _scale;
   late Animation<Offset> _slide;
+
+  final User? user = FirebaseAuth.instance.currentUser;
 
   @override
   void initState() {
@@ -53,6 +57,16 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   // ================================================================
+  // STREAM USER DATA
+  // ================================================================
+  Stream<DocumentSnapshot> get userStream {
+    return FirebaseFirestore.instance
+        .collection("Users")
+        .doc(user!.uid)
+        .snapshots();
+  }
+
+  // ================================================================
   // UI BUILD
   // ================================================================
   @override
@@ -60,12 +74,30 @@ class _HomeScreenState extends State<HomeScreen>
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
       appBar: _buildAppBar(),
-      body: FadeTransition(
-        opacity: _fade,
-        child: ScaleTransition(
-          scale: _scale,
-          child: SlideTransition(position: _slide, child: _buildBody()),
-        ),
+      body: StreamBuilder<DocumentSnapshot>(
+        stream: userStream,
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          final data = snapshot.data!.data() as Map<String, dynamic>?;
+
+          final name = data?["name"] ?? "Bạn";
+          final streak = data?["streak"] ?? 0;
+          final progress = (data?["progress"] ?? 0.0).toDouble();
+
+          return FadeTransition(
+            opacity: _fade,
+            child: ScaleTransition(
+              scale: _scale,
+              child: SlideTransition(
+                position: _slide,
+                child: _buildBody(name, streak, progress),
+              ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -117,15 +149,15 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   // ================================================================
-  // BODY MAIN HOME
+  // MAIN BODY
   // ================================================================
-  Widget _buildBody() {
+  Widget _buildBody(String name, int streak, double progress) {
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
-        _buildHeroSection(),
+        _buildHeroSection(name, streak),
         const SizedBox(height: 24),
-        _buildProgressCard(),
+        _buildProgressCard(progress),
         const SizedBox(height: 24),
         _buildQuickActions(),
         const SizedBox(height: 24),
@@ -140,7 +172,7 @@ class _HomeScreenState extends State<HomeScreen>
   // ================================================================
   // HERO SECTION
   // ================================================================
-  Widget _buildHeroSection() {
+  Widget _buildHeroSection(String name, int streak) {
     return Container(
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
@@ -165,7 +197,7 @@ class _HomeScreenState extends State<HomeScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  "Xin chào Hải 👋",
+                  "Xin chào $name 👋",
                   style: GoogleFonts.poppins(
                     color: Colors.white,
                     fontSize: 20,
@@ -200,7 +232,7 @@ class _HomeScreenState extends State<HomeScreen>
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        "Streak: 4 ngày",
+                        "Streak: $streak ngày",
                         style: GoogleFonts.poppins(
                           fontSize: 12,
                           color: Colors.white,
@@ -222,7 +254,7 @@ class _HomeScreenState extends State<HomeScreen>
   // ================================================================
   // PROGRESS CARD
   // ================================================================
-  Widget _buildProgressCard() {
+  Widget _buildProgressCard(double progress) {
     return Container(
       padding: const EdgeInsets.all(22),
       decoration: _card(),
@@ -237,10 +269,10 @@ class _HomeScreenState extends State<HomeScreen>
             ),
           ),
           const SizedBox(height: 18),
-          _buildLinearProgress(0.62),
+          _buildLinearProgress(progress),
           const SizedBox(height: 10),
           Text(
-            "Đã hoàn thành 60%",
+            "Đã hoàn thành ${(progress * 100).toStringAsFixed(0)}%",
             style: GoogleFonts.poppins(
               fontSize: 14,
               color: Colors.grey.shade600,
@@ -252,29 +284,33 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Widget _buildLinearProgress(double value) {
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0, end: value),
-      duration: const Duration(milliseconds: 1200),
-      curve: Curves.easeOut,
-      builder: (context, v, child) {
-        return Stack(
-          children: [
-            Container(
-              height: 12,
-              decoration: BoxDecoration(
-                color: Colors.grey.shade300,
-                borderRadius: BorderRadius.circular(20),
-              ),
-            ),
-            Container(
-              height: 12,
-              width: MediaQuery.of(context).size.width * v,
-              decoration: BoxDecoration(
-                color: Colors.teal,
-                borderRadius: BorderRadius.circular(20),
-              ),
-            ),
-          ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0, end: value),
+          duration: const Duration(milliseconds: 1200),
+          curve: Curves.easeOut,
+          builder: (context, v, child) {
+            return Stack(
+              children: [
+                Container(
+                  height: 12,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+                Container(
+                  height: 12,
+                  width: constraints.maxWidth * v,
+                  decoration: BoxDecoration(
+                    color: Colors.teal,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+              ],
+            );
+          },
         );
       },
     );
@@ -315,7 +351,7 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   // ================================================================
-  // FEATURED TOPICS GRID
+  // FEATURED TOPICS
   // ================================================================
   Widget _buildFeaturedTopics() {
     final List<Map<String, dynamic>> topics = [
@@ -374,7 +410,7 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   // ================================================================
-  // INSPIRATIONAL QUOTE
+  // QUOTE
   // ================================================================
   Widget _buildQuote() {
     return Container(

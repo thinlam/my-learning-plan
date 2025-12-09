@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+// Firebase
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:my_learning_plan/auth/login_page.dart';
+
+// Pages
+
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
 
@@ -13,6 +20,8 @@ class _ProfilePageState extends State<ProfilePage>
   late AnimationController _controller;
   late Animation<double> _fade;
   late Animation<Offset> _slide;
+
+  final User? user = FirebaseAuth.instance.currentUser;
 
   @override
   void initState() {
@@ -44,9 +53,19 @@ class _ProfilePageState extends State<ProfilePage>
     super.dispose();
   }
 
-  // =================================================================
+  // ==============================
+  // STREAM FIRESTORE USER DATA
+  // ==============================
+  Stream<DocumentSnapshot> get userStream {
+    return FirebaseFirestore.instance
+        .collection("Users")
+        .doc(user!.uid)
+        .snapshots();
+  }
+
+  // ==============================
   // UI
-  // =================================================================
+  // ==============================
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -54,7 +73,27 @@ class _ProfilePageState extends State<ProfilePage>
       appBar: _buildAppBar(),
       body: FadeTransition(
         opacity: _fade,
-        child: SlideTransition(position: _slide, child: _buildBody()),
+        child: SlideTransition(
+          position: _slide,
+          child: StreamBuilder<DocumentSnapshot>(
+            stream: userStream,
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              final data = snapshot.data!.data() as Map<String, dynamic>?;
+
+              final name = data?["name"] ?? "Không rõ tên";
+              final email = data?["email"] ?? user?.email ?? "";
+              final lessons = data?["lessons"] ?? 0;
+              final hours = data?["hours"] ?? 0;
+              final certificates = data?["certificates"] ?? 0;
+
+              return _buildBody(name, email, lessons, hours, certificates);
+            },
+          ),
+        ),
       ),
     );
   }
@@ -74,13 +113,19 @@ class _ProfilePageState extends State<ProfilePage>
     );
   }
 
-  Widget _buildBody() {
+  Widget _buildBody(
+    String name,
+    String email,
+    int lessons,
+    int hours,
+    int certificates,
+  ) {
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
-        _buildProfileHeader(),
+        _buildProfileHeader(name, email),
         const SizedBox(height: 20),
-        _buildStats(),
+        _buildStats(lessons, hours, certificates),
         const SizedBox(height: 20),
         _buildSectionTitle("Tài khoản"),
         _buildTile(Icons.edit, "Chỉnh sửa hồ sơ", Colors.blue, () {}),
@@ -106,10 +151,10 @@ class _ProfilePageState extends State<ProfilePage>
     );
   }
 
-  // =================================================================
+  // ==============================
   // PROFILE HEADER
-  // =================================================================
-  Widget _buildProfileHeader() {
+  // ==============================
+  Widget _buildProfileHeader(String name, String email) {
     return Container(
       padding: const EdgeInsets.all(22),
       decoration: _card(),
@@ -122,14 +167,14 @@ class _ProfilePageState extends State<ProfilePage>
           ),
           const SizedBox(height: 12),
           Text(
-            "Đoàn Hữu Hải",
+            name,
             style: GoogleFonts.poppins(
               fontSize: 20,
               fontWeight: FontWeight.w700,
             ),
           ),
           Text(
-            "haidoan@example.com",
+            email,
             style: GoogleFonts.poppins(
               fontSize: 13,
               color: Colors.grey.shade600,
@@ -140,19 +185,24 @@ class _ProfilePageState extends State<ProfilePage>
     );
   }
 
-  // =================================================================
-  // STATS (Bài học – Thời gian – Chứng chỉ)
-  // =================================================================
-  Widget _buildStats() {
+  // ==============================
+  // STATS BOX
+  // ==============================
+  Widget _buildStats(int lessons, int hours, int certs) {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: _card(),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _statItem(Icons.book, "12", "Bài đã học", Colors.blue),
-          _statItem(Icons.timer, "8h", "Thời gian", Colors.orange),
-          _statItem(Icons.emoji_events, "5", "Chứng chỉ", Colors.purple),
+          _statItem(Icons.book, lessons.toString(), "Bài đã học", Colors.blue),
+          _statItem(Icons.timer, "${hours}h", "Thời gian", Colors.orange),
+          _statItem(
+            Icons.emoji_events,
+            certs.toString(),
+            "Chứng chỉ",
+            Colors.purple,
+          ),
         ],
       ),
     );
@@ -182,9 +232,9 @@ class _ProfilePageState extends State<ProfilePage>
     );
   }
 
-  // =================================================================
+  // ==============================
   // SECTION TITLE
-  // =================================================================
+  // ==============================
   Widget _buildSectionTitle(String title) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10, left: 4),
@@ -199,9 +249,9 @@ class _ProfilePageState extends State<ProfilePage>
     );
   }
 
-  // =================================================================
+  // ==============================
   // LIST TILE ITEM
-  // =================================================================
+  // ==============================
   Widget _buildTile(
     IconData icon,
     String title,
@@ -231,9 +281,9 @@ class _ProfilePageState extends State<ProfilePage>
     );
   }
 
-  // =================================================================
+  // ==============================
   // LOGOUT BUTTON
-  // =================================================================
+  // ==============================
   Widget _buildLogoutButton() {
     return GestureDetector(
       onTap: _confirmLogout,
@@ -278,9 +328,18 @@ class _ProfilePageState extends State<ProfilePage>
           ),
           TextButton(
             child: const Text("Đăng xuất", style: TextStyle(color: Colors.red)),
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(context);
-              // TODO: đưa về màn login sau này
+
+              await FirebaseAuth.instance.signOut();
+
+              if (mounted) {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (_) => const LoginPage()),
+                  (route) => false,
+                );
+              }
             },
           ),
         ],
@@ -288,9 +347,9 @@ class _ProfilePageState extends State<ProfilePage>
     );
   }
 
-  // =================================================================
+  // ==============================
   // CARD STYLE
-  // =================================================================
+  // ==============================
   BoxDecoration _card() {
     return BoxDecoration(
       color: Colors.white,
