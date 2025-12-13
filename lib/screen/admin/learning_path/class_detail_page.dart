@@ -1,59 +1,62 @@
 import 'package:flutter/material.dart';
 
-class AdminMaterialPage extends StatelessWidget {
-  const AdminMaterialPage({super.key});
+class ClassDetailPage extends StatelessWidget {
+  final String subject;
+  final String grade;
+
+  const ClassDetailPage({
+    super.key,
+    required this.subject,
+    required this.grade,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xfff4f6fb),
       appBar: AppBar(
-        title: const Text("Học liệu"),
+        title: Text("$subject – Khối $grade"),
         backgroundColor: Colors.indigo,
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: const [
-          _MaterialCard(
-            title: "Video bài giảng",
-            subtitle: "Toán – Văn – Anh",
-            icon: Icons.play_circle_fill,
+          _ActionCard(
+            icon: Icons.map,
+            title: "Lộ trình học chung",
+            subtitle: "Áp dụng cho toàn khối",
           ),
-          _MaterialCard(
-            title: "Bài tập luyện tập",
-            subtitle: "Bài tập theo chương",
-            icon: Icons.assignment,
+          _ActionCard(
+            icon: Icons.edit_calendar,
+            title: "Lộ trình cá nhân hóa",
+            subtitle: "Theo từng học sinh",
           ),
-          _MaterialCard(
-            title: "Đề cương ôn tập",
-            subtitle: "Ôn thi học kỳ / đại học",
-            icon: Icons.menu_book,
+          _ActionCard(
+            icon: Icons.people,
+            title: "Danh sách học sinh",
+            subtitle: "Theo dõi tiến độ học tập",
           ),
         ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: null,
-        child: Icon(Icons.add),
       ),
     );
   }
 }
 
-class _MaterialCard extends StatelessWidget {
+class _ActionCard extends StatelessWidget {
+  final IconData icon;
   final String title;
   final String subtitle;
-  final IconData icon;
 
-  const _MaterialCard({
+  const _ActionCard({
+    required this.icon,
     required this.title,
     required this.subtitle,
-    required this.icon,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 14),
+      margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -64,7 +67,7 @@ class _MaterialCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(icon, size: 36, color: Colors.indigo),
+          Icon(icon, color: Colors.indigo),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
@@ -77,6 +80,7 @@ class _MaterialCard extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
+                const SizedBox(height: 4),
                 Text(
                   subtitle,
                   style: const TextStyle(fontSize: 12, color: Colors.grey),

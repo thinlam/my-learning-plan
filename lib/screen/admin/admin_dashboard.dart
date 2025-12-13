@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:my_learning_plan/screen/admin/material/material_page.dart';
+
 import 'learning_path/learning_path_page.dart';
 import 'personal_path/personal_path_page.dart';
 import 'template_path/template_path_page.dart';
@@ -32,6 +33,12 @@ class AdminDashboard extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          // ===== HEADER =====
+          const _AdminHeader(),
+
+          const SizedBox(height: 24),
+
+          // ===== QUẢN LÝ CHÍNH =====
           const _SectionTitle("Quản lý chính"),
           _AdminCard(
             icon: Icons.map,
@@ -48,7 +55,7 @@ class AdminDashboard extends StatelessWidget {
           _AdminCard(
             icon: Icons.layers,
             title: "Bộ lộ trình mẫu",
-            subtitle: "Lộ trình ôn thi – hằng ngày",
+            subtitle: "Ôn thi – hằng ngày – học thêm",
             onTap: () => _go(context, const TemplatePathPage()),
           ),
           _AdminCard(
@@ -59,6 +66,8 @@ class AdminDashboard extends StatelessWidget {
           ),
 
           const SizedBox(height: 24),
+
+          // ===== AI & NÂNG CAO =====
           const _SectionTitle("AI & nâng cao"),
           _AdminCard(
             icon: Icons.smart_toy,
@@ -86,11 +95,13 @@ class AdminDashboard extends StatelessWidget {
           ),
 
           const SizedBox(height: 24),
-          const _SectionTitle("Hệ thống"),
+
+          // ===== HỆ THỐNG =====
+          const _SectionTitle("Hệ thống & báo cáo"),
           _AdminCard(
             icon: Icons.bar_chart,
-            title: "Báo cáo",
-            subtitle: "Tuần – tháng – tiến độ",
+            title: "Báo cáo tiến độ",
+            subtitle: "Ngày – tuần – tháng – năm",
             onTap: () => _go(context, const ReportPage()),
           ),
           _AdminCard(
@@ -117,6 +128,59 @@ class AdminDashboard extends StatelessWidget {
   }
 }
 
+/// ================= HEADER =================
+class _AdminHeader extends StatelessWidget {
+  const _AdminHeader();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Colors.indigo, Color(0xff5c6bc0)],
+        ),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        children: [
+          const CircleAvatar(
+            radius: 28,
+            backgroundColor: Colors.white,
+            child: Icon(
+              Icons.admin_panel_settings,
+              size: 32,
+              color: Colors.indigo,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: const [
+                Text(
+                  "Xin chào, Admin 👋",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                SizedBox(height: 6),
+                Text(
+                  "Quản lý toàn bộ hệ thống học tập",
+                  style: TextStyle(color: Colors.white70, fontSize: 13),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// ================= SECTION TITLE =================
 class _SectionTitle extends StatelessWidget {
   final String text;
   const _SectionTitle(this.text);
@@ -127,16 +191,13 @@ class _SectionTitle extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 12),
       child: Text(
         text,
-        style: const TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-          color: Colors.black87,
-        ),
+        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
       ),
     );
   }
 }
 
+/// ================= ADMIN CARD =================
 class _AdminCard extends StatelessWidget {
   final IconData icon;
   final String title;
@@ -153,30 +214,30 @@ class _AdminCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(18),
       onTap: onTap,
       child: Container(
         margin: const EdgeInsets.only(bottom: 14),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(18),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
+              blurRadius: 12,
+              offset: const Offset(0, 6),
             ),
           ],
         ),
         child: Row(
           children: [
             Container(
-              width: 48,
-              height: 48,
+              width: 50,
+              height: 50,
               decoration: BoxDecoration(
                 color: Colors.indigo.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(14),
               ),
               child: Icon(icon, color: Colors.indigo),
             ),
