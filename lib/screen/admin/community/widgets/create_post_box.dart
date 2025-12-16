@@ -1,67 +1,96 @@
 import 'package:flutter/material.dart';
+import 'create_post_page.dart';
+import 'slide_from_top_route.dart';
 
 class CreatePostBox extends StatelessWidget {
-  const CreatePostBox({super.key});
+  final Function(String) onPost;
+
+  const CreatePostBox({super.key, required this.onPost});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10),
-        ],
-      ),
+      color: Colors.white,
+      padding: const EdgeInsets.all(12),
       child: Column(
         children: [
-          Row(
-            children: [
-              const CircleAvatar(
-                backgroundColor: Colors.indigo,
-                child: Icon(Icons.person, color: Colors.white),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: TextField(
-                  decoration: InputDecoration(
-                    hintText: "Bạn đang nghĩ gì?",
-                    filled: true,
-                    fillColor: Colors.grey.shade100,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
+          // ===== INPUT =====
+          InkWell(
+            borderRadius: BorderRadius.circular(24),
+            onTap: () {
+              Navigator.of(
+                context,
+              ).push(SlideFromTopRoute(page: CreatePostPage(onPost: onPost)));
+            },
+            child: Row(
+              children: [
+                const CircleAvatar(child: Icon(Icons.person)),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 10,
                     ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(20),
-                      borderSide: BorderSide.none,
+                    decoration: BoxDecoration(
+                      color: const Color(0xfff0f2f5),
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    child: const Text(
+                      "Bạn đang nghĩ gì?",
+                      style: TextStyle(color: Colors.grey),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
+
           const SizedBox(height: 12),
+          const Divider(height: 1),
+
+          // ===== ACTION BUTTONS =====
           Row(
-            children: [
-              TextButton.icon(
-                onPressed: () {},
-                icon: const Icon(Icons.image),
-                label: const Text("Ảnh"),
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: const [
+              _ActionItem(icon: Icons.image, color: Colors.green, label: "Ảnh"),
+              _ActionItem(
+                icon: Icons.videocam,
+                color: Colors.red,
+                label: "Video",
               ),
-              TextButton.icon(
-                onPressed: () {},
-                icon: const Icon(Icons.insert_drive_file),
-                label: const Text("File"),
+              _ActionItem(
+                icon: Icons.emoji_emotions,
+                color: Colors.orange,
+                label: "Cảm xúc",
               ),
-              const Spacer(),
-              ElevatedButton(onPressed: () {}, child: const Text("Đăng")),
             ],
           ),
         ],
       ),
+    );
+  }
+}
+
+class _ActionItem extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final String label;
+
+  const _ActionItem({
+    required this.icon,
+    required this.color,
+    required this.label,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, color: color),
+        const SizedBox(width: 6),
+        Text(label),
+      ],
     );
   }
 }

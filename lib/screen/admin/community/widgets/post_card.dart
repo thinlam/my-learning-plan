@@ -1,75 +1,143 @@
 import 'package:flutter/material.dart';
 
-class PostCard extends StatelessWidget {
+class PostCard extends StatefulWidget {
   final String author;
   final String content;
   final String time;
+  final bool isAdmin;
 
   const PostCard({
     super.key,
     required this.author,
     required this.content,
     required this.time,
+    this.isAdmin = false,
   });
+
+  @override
+  State<PostCard> createState() => _PostCardState();
+}
+
+class _PostCardState extends State<PostCard> {
+  bool liked = false;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10),
-        ],
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // ===== HEADER =====
           Row(
             children: [
-              const CircleAvatar(
-                backgroundColor: Colors.indigo,
-                child: Icon(Icons.person, color: Colors.white),
-              ),
-              const SizedBox(width: 12),
+              const CircleAvatar(child: Icon(Icons.person)),
+              const SizedBox(width: 8),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      author,
-                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    Row(
+                      children: [
+                        Text(
+                          widget.author,
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        if (widget.isAdmin)
+                          const Padding(
+                            padding: EdgeInsets.only(left: 6),
+                            child: Chip(
+                              label: Text("ADMIN"),
+                              visualDensity: VisualDensity.compact,
+                            ),
+                          ),
+                      ],
                     ),
                     Text(
-                      time,
-                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                      widget.time,
+                      style: const TextStyle(fontSize: 11, color: Colors.grey),
                     ),
                   ],
                 ),
               ),
-              const Icon(Icons.more_vert),
+              if (widget.isAdmin)
+                PopupMenuButton(
+                  itemBuilder: (_) => const [
+                    PopupMenuItem(child: Text("Ghim bài viết")),
+                    PopupMenuItem(child: Text("Ẩn bài viết")),
+                    PopupMenuItem(child: Text("Khoá bình luận")),
+                    PopupMenuItem(child: Text("Xoá bài viết")),
+                  ],
+                ),
             ],
           ),
+
           const SizedBox(height: 12),
-          Text(content, style: const TextStyle(fontSize: 14)),
+          Text(widget.content),
+
           const SizedBox(height: 12),
+          const Divider(height: 1),
+
+          // ===== ACTION BAR =====
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              TextButton.icon(
-                onPressed: () {},
-                icon: const Icon(Icons.thumb_up_alt_outlined),
-                label: const Text("Thích"),
+              _PostAction(
+                icon: liked ? Icons.thumb_up : Icons.thumb_up_alt_outlined,
+                label: "Thích",
+                color: liked ? Colors.blue : Colors.grey,
+                onTap: () => setState(() => liked = !liked),
               ),
-              TextButton.icon(
-                onPressed: () {},
-                icon: const Icon(Icons.comment_outlined),
-                label: const Text("Bình luận"),
+              const _PostAction(
+                icon: Icons.comment_outlined,
+                label: "Bình luận",
+                color: Colors.grey,
+              ),
+              const _PostAction(
+                icon: Icons.share_outlined,
+                label: "Chia sẻ",
+                color: Colors.grey,
               ),
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _PostAction extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback? onTap;
+
+  const _PostAction({
+    required this.icon,
+    required this.label,
+    required this.color,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+        child: Row(
+          children: [
+            Icon(icon, size: 20, color: color),
+            const SizedBox(width: 6),
+            Text(label),
+          ],
+        ),
       ),
     );
   }

@@ -10,8 +10,6 @@ import 'package:my_learning_plan/screen/admin/admin_dashboard.dart';
 import 'register_page.dart';
 import '../auth/forgot_password.dart';
 import '../screen/survey/survey_page.dart';
-import '../screen/home/page/navigation_page.dart';
-import '../screen/admin/admin_dashboard.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});

@@ -2,78 +2,134 @@ import 'package:flutter/material.dart';
 import 'widgets/create_post_box.dart';
 import 'widgets/post_card.dart';
 
-class GroupFeedPage extends StatelessWidget {
-  const GroupFeedPage({super.key});
+class GroupFeedPage extends StatefulWidget {
+  final String groupName;
+
+  const GroupFeedPage({super.key, required this.groupName});
+
+  @override
+  State<GroupFeedPage> createState() => _GroupFeedPageState();
+}
+
+class _GroupFeedPageState extends State<GroupFeedPage>
+    with SingleTickerProviderStateMixin {
+  late TabController _tab;
+
+  final List<Map<String, dynamic>> posts = [
+    {
+      "author": "Giáo viên",
+      "content": "📌 Thông báo kiểm tra giữa kỳ",
+      "time": "1 giờ trước",
+      "approved": true,
+    },
+    {
+      "author": "Học sinh A",
+      "content": "Thầy ơi bài 5 em chưa hiểu",
+      "time": "30 phút trước",
+      "approved": false,
+    },
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _tab = TabController(length: 3, vsync: this);
+  }
+
+  void addPost(String text) {
+    setState(() {
+      posts.insert(0, {
+        "author": "ADMIN",
+        "content": text,
+        "time": "Vừa xong",
+        "approved": true,
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xfff4f6fb),
       appBar: AppBar(
-        title: const Text("Nhóm Toán 12"),
-        backgroundColor: Colors.indigo,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.info_outline),
-            onPressed: () => _showGroupInfo(context),
-          ),
-        ],
+        title: Text("${widget.groupName} (ADMIN)"),
+        bottom: TabBar(
+          controller: _tab,
+          tabs: const [
+            Tab(text: "Bài viết"),
+            Tab(text: "Chờ duyệt"),
+            Tab(text: "Cài đặt"),
+          ],
+        ),
       ),
-      body: Column(
-        children: [
-          const CreatePostBox(),
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.all(16),
-              children: const [
-                PostCard(
-                  author: "Giáo viên Toán",
-                  content:
-                      "📌 Tuần này học chương 3. Các em nhớ làm bài tập trước thứ 6.",
-                  time: "2 giờ trước",
-                ),
-                PostCard(
-                  author: "Nguyễn Văn A",
-                  content: "Thầy ơi bài 5 trang 72 em chưa hiểu 😥",
-                  time: "1 giờ trước",
-                ),
-                PostCard(
-                  author: "Trần Thị B",
-                  content: "Em đã hoàn thành bài tập rồi ạ 👍",
-                  time: "30 phút trước",
-                ),
-              ],
-            ),
-          ),
-        ],
+      body: TabBarView(
+        controller: _tab,
+        children: [_postsTab(), _pendingTab(), _settingsTab()],
       ),
     );
   }
 
-  void _showGroupInfo(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (_) => const Padding(
-        padding: EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "Thông tin nhóm",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 12),
-            Text("• Môn: Toán"),
-            Text("• Khối: 12"),
-            Text("• Thành viên: 25"),
-            Text("• Mục tiêu: Trao đổi & hỗ trợ học tập"),
-          ],
+  // ===== TAB: BÀI VIẾT =====
+  Widget _postsTab() {
+    final approved = posts.where((p) => p["approved"]).toList();
+
+    return Column(
+      children: [
+        CreatePostBox(onPost: addPost),
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.all(12),
+            children: approved.map((p) {
+              return PostCard(
+                author: p["author"],
+                content: p["content"],
+                time: p["time"],
+                isAdmin: true,
+              );
+            }).toList(),
+          ),
         ),
-      ),
+      ],
+    );
+  }
+
+  // ===== TAB: CHỜ DUYỆT =====
+  Widget _pendingTab() {
+    final pending = posts.where((p) => !p["approved"]).toList();
+
+    return ListView(
+      padding: const EdgeInsets.all(12),
+      children: pending.map((p) {
+        return Card(
+          child: ListTile(
+            title: Text(p["author"]),
+            subtitle: Text(p["content"]),
+            trailing: ElevatedButton(
+              child: const Text("Duyệt"),
+              onPressed: () {
+                setState(() => p["approved"] = true);
+              },
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  // ===== TAB: CÀI ĐẶT =====
+  Widget _settingsTab() {
+    return ListView(
+      children: [
+        SwitchListTile(
+          value: true,
+          onChanged: null,
+          title: Text("Bật duyệt bài viết"),
+        ),
+        SwitchListTile(
+          value: false,
+          onChanged: null,
+          title: Text("Cho phép học sinh đăng bài"),
+        ),
+      ],
     );
   }
 }

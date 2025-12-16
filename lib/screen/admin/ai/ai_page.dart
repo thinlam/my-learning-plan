@@ -124,7 +124,7 @@ class _AIModuleCardState extends State<_AIModuleCard> {
               ),
               Switch(
                 value: enabled,
-                activeColor: Colors.indigo,
+                activeThumbColor: Colors.indigo,
                 onChanged: (v) => setState(() => enabled = v),
               ),
             ],
