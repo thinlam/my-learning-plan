@@ -132,9 +132,7 @@ class _SurveyPageState extends State<SurveyPage> {
           "goal": goal,
           "extraSubjects": selectedExtraSubjects,
           "extraDays": selectedExtraDays,
-          "extraClassTime": extraClassTime != null
-              ? extraClassTime!.format(context)
-              : null,
+          "extraClassTime": extraClassTime?.format(context),
           "updatedAt": FieldValue.serverTimestamp(),
         },
       });
