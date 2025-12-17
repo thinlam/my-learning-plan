@@ -4,13 +4,12 @@ import 'package:google_fonts/google_fonts.dart';
 // Firebase
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:my_learning_plan/screen/admin/admin_dashboard.dart';
 
 // Pages
 import 'register_page.dart';
 import '../auth/forgot_password.dart';
 import '../screen/survey/survey_page.dart';
-import '../screen/home/page/navigation_page.dart';
-import '../screen/admin/admin_dashboard.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -102,7 +101,7 @@ class _LoginPageState extends State<LoginPage>
     );
   }
 
-  // 🔥 LOGIN + PHÂN QUYỀN + CHECK SURVEY
+  // 🔥 LOGIN FIREBASE + PHÂN QUYỀN
   Future<void> _login() async {
     if (email.text.trim().isEmpty || password.text.isEmpty) {
       _showMessage('Vui lòng nhập đầy đủ Email và Mật khẩu');
@@ -112,7 +111,7 @@ class _LoginPageState extends State<LoginPage>
     setState(() => isLoading = true);
 
     try {
-      // 1) Đăng nhập Firebase
+      // 1) Đăng nhập Firebase Auth
       final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: email.text.trim(),
         password: password.text.trim(),
@@ -120,7 +119,7 @@ class _LoginPageState extends State<LoginPage>
 
       final uid = credential.user!.uid;
 
-      // 2) Lấy thông tin user từ Firestore
+      // 2) Lấy role từ Firestore
       final userDoc = await FirebaseFirestore.instance
           .collection('Users')
           .doc(uid)
@@ -132,24 +131,15 @@ class _LoginPageState extends State<LoginPage>
         return;
       }
 
-      final data = userDoc.data();
-      final role = data?['role'] ?? "user";
-      final bool isSurveyDone = data?['surveyCompleted'] == true;
+      final role = userDoc.data()?['role'] ?? "user";
 
       setState(() => isLoading = false);
 
-      // 3) Điều hướng dựa vào role + surveyCompleted
-      Widget nextPage;
+      // 3) Điều hướng
+      Widget nextPage = role == "admin"
+          ? const AdminDashboard()
+          : const SurveyPage();
 
-      if (role == "admin") {
-        nextPage = const AdminDashboard();
-      } else {
-        nextPage = isSurveyDone
-            ? const NavigationPage() // Đã khảo sát → vào Home
-            : const SurveyPage(); // Chưa khảo sát → vào Survey
-      }
-
-      // 4) Animation điều hướng
       Navigator.pushReplacement(
         context,
         PageRouteBuilder(
@@ -201,7 +191,7 @@ class _LoginPageState extends State<LoginPage>
         builder: (context, child) {
           return Stack(
             children: [
-              // Background
+              // Background gradient
               Container(
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
@@ -216,6 +206,7 @@ class _LoginPageState extends State<LoginPage>
               Positioned(
                 top: -80 * (1 - _bgPulse.value),
                 left: -40,
+                // ignore: deprecated_member_use
                 child: _blurCircle(160, Colors.teal.withOpacity(0.25)),
               ),
 
@@ -223,6 +214,7 @@ class _LoginPageState extends State<LoginPage>
               Positioned(
                 top: size.height * 0.28,
                 right: -50 * (1 - _bgPulse.value),
+                // ignore: deprecated_member_use
                 child: _blurCircle(140, Colors.blue.withOpacity(0.18)),
               ),
 
@@ -230,6 +222,7 @@ class _LoginPageState extends State<LoginPage>
               Positioned(
                 bottom: -60,
                 left: size.width * 0.3,
+                // ignore: deprecated_member_use
                 child: _blurCircle(120, Colors.tealAccent.withOpacity(0.18)),
               ),
 
@@ -244,7 +237,6 @@ class _LoginPageState extends State<LoginPage>
                     children: [
                       const SizedBox(height: 14),
 
-                      // HEADER
                       FadeTransition(
                         opacity: _headerFade,
                         child: Column(
@@ -256,6 +248,7 @@ class _LoginPageState extends State<LoginPage>
                                 color: Colors.white,
                                 boxShadow: [
                                   BoxShadow(
+                                    // ignore: deprecated_member_use
                                     color: Colors.black.withOpacity(0.08),
                                     blurRadius: 18,
                                     offset: const Offset(0, 10),
@@ -292,7 +285,6 @@ class _LoginPageState extends State<LoginPage>
 
                       const SizedBox(height: 26),
 
-                      // CARD LOGIN
                       FadeTransition(
                         opacity: _cardFade,
                         child: SlideTransition(
@@ -305,6 +297,7 @@ class _LoginPageState extends State<LoginPage>
                               borderRadius: BorderRadius.circular(20),
                               boxShadow: [
                                 BoxShadow(
+                                  // ignore: deprecated_member_use
                                   color: Colors.black.withOpacity(0.08),
                                   blurRadius: 24,
                                   offset: const Offset(0, 14),
