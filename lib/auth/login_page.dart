@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:my_learning_plan/screen/admin/admin_dashboard.dart';
+import '../screen/home/page/navigation_page.dart';
 
 // Pages
 import 'register_page.dart';
@@ -111,7 +112,7 @@ class _LoginPageState extends State<LoginPage>
     setState(() => isLoading = true);
 
     try {
-      // 1) Đăng nhập Firebase Auth
+      // 1️⃣ Firebase Auth
       final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: email.text.trim(),
         password: password.text.trim(),
@@ -119,7 +120,7 @@ class _LoginPageState extends State<LoginPage>
 
       final uid = credential.user!.uid;
 
-      // 2) Lấy role từ Firestore
+      // 2️⃣ Firestore user document
       final userDoc = await FirebaseFirestore.instance
           .collection('Users')
           .doc(uid)
@@ -131,14 +132,22 @@ class _LoginPageState extends State<LoginPage>
         return;
       }
 
-      final role = userDoc.data()?['role'] ?? "user";
+      final data = userDoc.data()!;
+      final String role = data['role'] ?? 'user';
+      final bool surveyCompleted = data['surveyCompleted'] == true;
 
       setState(() => isLoading = false);
 
-      // 3) Điều hướng
-      Widget nextPage = role == "admin"
-          ? const AdminDashboard()
-          : const SurveyPage();
+      // 3️⃣ ĐIỀU HƯỚNG ĐÚNG NGHIỆP VỤ
+      Widget nextPage;
+
+      if (role == 'admin') {
+        nextPage = const AdminDashboard();
+      } else {
+        nextPage = surveyCompleted
+            ? const NavigationPage() // ✅ ĐÃ KHẢO SÁT
+            : const SurveyPage(); // ❌ CHƯA KHẢO SÁT
+      }
 
       Navigator.pushReplacement(
         context,
