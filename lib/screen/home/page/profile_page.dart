@@ -4,9 +4,11 @@ import 'package:google_fonts/google_fonts.dart';
 // Firebase
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:my_learning_plan/auth/login_page.dart';
+import 'package:my_learning_plan/auth/change_password_page.dart';
 
-// Pages
+import 'package:my_learning_plan/auth/login_page.dart';
+import 'package:my_learning_plan/screen/home/Change_Password/change_password.dart';
+import 'package:my_learning_plan/screen/profile/edit_profile_page.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -54,9 +56,9 @@ class _ProfilePageState extends State<ProfilePage>
   }
 
   // ==============================
-  // STREAM FIRESTORE USER DATA
+  // STREAM USER DATA
   // ==============================
-  Stream<DocumentSnapshot> get userStream {
+  Stream<DocumentSnapshot<Map<String, dynamic>>> get userStream {
     return FirebaseFirestore.instance
         .collection("Users")
         .doc(user!.uid)
@@ -75,22 +77,31 @@ class _ProfilePageState extends State<ProfilePage>
         opacity: _fade,
         child: SlideTransition(
           position: _slide,
-          child: StreamBuilder<DocumentSnapshot>(
+          child: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
             stream: userStream,
             builder: (context, snapshot) {
               if (!snapshot.hasData) {
                 return const Center(child: CircularProgressIndicator());
               }
 
-              final data = snapshot.data!.data() as Map<String, dynamic>?;
+              final data = snapshot.data!.data();
 
               final name = data?["name"] ?? "Không rõ tên";
               final email = data?["email"] ?? user?.email ?? "";
+              final avatarUrl = data?["avatarUrl"] as String?;
+
               final lessons = data?["lessons"] ?? 0;
               final hours = data?["hours"] ?? 0;
               final certificates = data?["certificates"] ?? 0;
 
-              return _buildBody(name, email, lessons, hours, certificates);
+              return _buildBody(
+                name,
+                email,
+                avatarUrl,
+                lessons,
+                hours,
+                certificates,
+              );
             },
           ),
         ),
@@ -116,6 +127,7 @@ class _ProfilePageState extends State<ProfilePage>
   Widget _buildBody(
     String name,
     String email,
+    String? avatarUrl,
     int lessons,
     int hours,
     int certificates,
@@ -123,13 +135,24 @@ class _ProfilePageState extends State<ProfilePage>
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
-        _buildProfileHeader(name, email),
+        _buildProfileHeader(name, email, avatarUrl),
         const SizedBox(height: 20),
         _buildStats(lessons, hours, certificates),
         const SizedBox(height: 20),
         _buildSectionTitle("Tài khoản"),
-        _buildTile(Icons.edit, "Chỉnh sửa hồ sơ", Colors.blue, () {}),
-        _buildTile(Icons.lock, "Đổi mật khẩu", Colors.orange, () {}),
+        _buildTile(Icons.edit, "Chỉnh sửa hồ sơ", Colors.blue, () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const EditProfilePage()),
+          );
+        }),
+        _buildTile(Icons.lock, "Đổi mật khẩu", Colors.orange, () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const ChangePassword()),
+          );
+        }),
+
         const SizedBox(height: 20),
         _buildSectionTitle("Cài đặt"),
         _buildTile(Icons.notifications, "Thông báo", Colors.green, () {}),
@@ -152,9 +175,9 @@ class _ProfilePageState extends State<ProfilePage>
   }
 
   // ==============================
-  // PROFILE HEADER
+  // PROFILE HEADER (AVATAR SYNC)
   // ==============================
-  Widget _buildProfileHeader(String name, String email) {
+  Widget _buildProfileHeader(String name, String email, String? avatarUrl) {
     return Container(
       padding: const EdgeInsets.all(22),
       decoration: _card(),
@@ -163,7 +186,10 @@ class _ProfilePageState extends State<ProfilePage>
           CircleAvatar(
             radius: 48,
             backgroundColor: Colors.teal.shade200,
-            child: const Icon(Icons.person, size: 50, color: Colors.white),
+            backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl) : null,
+            child: avatarUrl == null
+                ? const Icon(Icons.person, size: 50, color: Colors.white)
+                : null,
           ),
           const SizedBox(height: 12),
           Text(
@@ -186,7 +212,7 @@ class _ProfilePageState extends State<ProfilePage>
   }
 
   // ==============================
-  // STATS BOX
+  // STATS
   // ==============================
   Widget _buildStats(int lessons, int hours, int certs) {
     return Container(
@@ -250,7 +276,7 @@ class _ProfilePageState extends State<ProfilePage>
   }
 
   // ==============================
-  // LIST TILE ITEM
+  // TILE
   // ==============================
   Widget _buildTile(
     IconData icon,
@@ -282,7 +308,7 @@ class _ProfilePageState extends State<ProfilePage>
   }
 
   // ==============================
-  // LOGOUT BUTTON
+  // LOGOUT
   // ==============================
   Widget _buildLogoutButton() {
     return GestureDetector(
@@ -330,9 +356,7 @@ class _ProfilePageState extends State<ProfilePage>
             child: const Text("Đăng xuất", style: TextStyle(color: Colors.red)),
             onPressed: () async {
               Navigator.pop(context);
-
               await FirebaseAuth.instance.signOut();
-
               if (mounted) {
                 Navigator.pushAndRemoveUntil(
                   context,
@@ -348,7 +372,7 @@ class _ProfilePageState extends State<ProfilePage>
   }
 
   // ==============================
-  // CARD STYLE
+  // CARD DECORATION
   // ==============================
   BoxDecoration _card() {
     return BoxDecoration(
