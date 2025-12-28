@@ -82,9 +82,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
   // =========================
   Widget _avatarItem(String url, bool isSelected) {
     return AnimatedScale(
-      scale: isSelected ? 1.02 : 1,
-      duration: const Duration(milliseconds: 140),
-      curve: Curves.easeOut,
+      scale: isSelected ? 1.02 : 1, // slight scale up if selected
+      duration: const Duration(milliseconds: 140), // quick animation
+      curve: Curves.easeOut, // smooth curve
       child: Stack(
         alignment: Alignment.center,
         children: [

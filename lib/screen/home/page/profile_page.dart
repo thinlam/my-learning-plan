@@ -7,8 +7,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:my_learning_plan/auth/change_password_page.dart';
 
 import 'package:my_learning_plan/auth/login_page.dart';
+import 'package:my_learning_plan/notification/notification_page.dart';
 import 'package:my_learning_plan/screen/home/Change_Password/change_password.dart';
 import 'package:my_learning_plan/screen/profile/edit_profile_page.dart';
+import 'package:my_learning_plan/screen/settings/language_page.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -140,6 +142,7 @@ class _ProfilePageState extends State<ProfilePage>
         _buildStats(lessons, hours, certificates),
         const SizedBox(height: 20),
         _buildSectionTitle("Tài khoản"),
+        //Edit Profile & Change Password
         _buildTile(Icons.edit, "Chỉnh sửa hồ sơ", Colors.blue, () {
           Navigator.push(
             context,
@@ -152,12 +155,24 @@ class _ProfilePageState extends State<ProfilePage>
             MaterialPageRoute(builder: (_) => const ChangePassword()),
           );
         }),
-
+        //Notifications
         const SizedBox(height: 20),
         _buildSectionTitle("Cài đặt"),
-        _buildTile(Icons.notifications, "Thông báo", Colors.green, () {}),
-        _buildTile(Icons.language, "Ngôn ngữ", Colors.purple, () {}),
-        _buildTile(Icons.settings, "Cài đặt chung", Colors.grey, () {}),
+        _buildTile(Icons.notifications, "Thông báo", Colors.green, () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const NotificationsPage()),
+          );
+        }),
+        //
+        _buildTile(Icons.language, "Ngôn ngữ", Colors.purple, () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const LanguagePage()),
+          );
+        }),
+
+        _buildTile(Icons.dark_mode, "Chế độ tối", Colors.grey, () {}),
         const SizedBox(height: 20),
         _buildSectionTitle("Khác"),
         _buildTile(Icons.help_center, "Trung tâm hỗ trợ", Colors.indigo, () {}),
