@@ -73,7 +73,6 @@ class _HomeScreenState extends State<HomeScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
-      appBar: _buildAppBar(),
       body: StreamBuilder<DocumentSnapshot>(
         stream: userStream,
         builder: (context, snapshot) {
@@ -86,14 +85,18 @@ class _HomeScreenState extends State<HomeScreen>
           final name = data?["name"] ?? "Bạn";
           final streak = data?["streak"] ?? 0;
           final progress = (data?["progress"] ?? 0.0).toDouble();
+          final avatarUrl = data?["avatarUrl"] as String?;
 
-          return FadeTransition(
-            opacity: _fade,
-            child: ScaleTransition(
-              scale: _scale,
-              child: SlideTransition(
-                position: _slide,
-                child: _buildBody(name, streak, progress),
+          return Scaffold(
+            appBar: _buildAppBar(avatarUrl),
+            body: FadeTransition(
+              opacity: _fade,
+              child: ScaleTransition(
+                scale: _scale,
+                child: SlideTransition(
+                  position: _slide,
+                  child: _buildBody(name, streak, progress),
+                ),
               ),
             ),
           );
@@ -105,7 +108,7 @@ class _HomeScreenState extends State<HomeScreen>
   // ================================================================
   // APP BAR
   // ================================================================
-  AppBar _buildAppBar() {
+  AppBar _buildAppBar(String? avatarUrl) {
     return AppBar(
       backgroundColor: Colors.white,
       elevation: 0.7,
@@ -140,8 +143,14 @@ class _HomeScreenState extends State<HomeScreen>
         Padding(
           padding: const EdgeInsets.only(right: 14),
           child: CircleAvatar(
+            radius: 18,
             backgroundColor: Colors.teal.shade200,
-            child: const Icon(Icons.person, color: Colors.white),
+            backgroundImage: avatarUrl != null && avatarUrl.isNotEmpty
+                ? NetworkImage(avatarUrl)
+                : null,
+            child: avatarUrl == null || avatarUrl.isEmpty
+                ? const Icon(Icons.person, color: Colors.white)
+                : null,
           ),
         ),
       ],
@@ -355,12 +364,12 @@ class _HomeScreenState extends State<HomeScreen>
   // ================================================================
   Widget _buildFeaturedTopics() {
     final List<Map<String, dynamic>> topics = [
-      {"name": "Flutter", "color": Colors.blue},
-      {"name": "Frontend", "color": Colors.orange},
-      {"name": "AI & Data", "color": Colors.purple},
-      {"name": "Thiết kế", "color": Colors.pink},
-      {"name": "Kỹ năng mềm", "color": Colors.teal},
-      {"name": "Ngôn ngữ", "color": Colors.green},
+      {"name": "Flutter", "icon": Icons.flutter_dash, "color": Colors.blue},
+      {"name": "Frontend", "icon": Icons.web, "color": Colors.orange},
+      {"name": "AI & Data", "icon": Icons.auto_graph, "color": Colors.purple},
+      {"name": "Thiết kế", "icon": Icons.palette, "color": Colors.pink},
+      {"name": "Kỹ năng mềm", "icon": Icons.psychology, "color": Colors.teal},
+      {"name": "Ngôn ngữ", "icon": Icons.language, "color": Colors.green},
     ];
 
     return Column(
@@ -379,22 +388,30 @@ class _HomeScreenState extends State<HomeScreen>
             crossAxisCount: 3,
             crossAxisSpacing: 12,
             mainAxisSpacing: 12,
-            childAspectRatio: 1,
           ),
           itemBuilder: (context, i) {
+            final t = topics[i];
             return Container(
               decoration: _card(),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.circle,
-                    color: topics[i]["color"] as Color,
-                    size: 20,
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: (t["color"] as Color).withOpacity(0.12),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      t["icon"] as IconData,
+                      color: t["color"] as Color,
+                      size: 28,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    topics[i]["name"] as String,
+                    t["name"],
+                    textAlign: TextAlign.center,
                     style: GoogleFonts.poppins(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
