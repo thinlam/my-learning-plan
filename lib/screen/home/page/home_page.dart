@@ -4,6 +4,14 @@ import 'package:google_fonts/google_fonts.dart';
 // Firebase
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:my_learning_plan/screen/topics/language/language_page.dart';
+import 'package:my_learning_plan/screen/topics/ai_data/ai_data_page.dart';
+import 'package:my_learning_plan/screen/topics/design/design_page.dart';
+import 'package:my_learning_plan/screen/topics/flutter/flutter_page.dart';
+import 'package:my_learning_plan/screen/topics/frontend/frontend_page.dart';
+import 'package:my_learning_plan/screen/topics/soft_skills/soft_skills_page.dart';
+
+// Topic pages
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -30,17 +38,17 @@ class _HomeScreenState extends State<HomeScreen>
       duration: const Duration(milliseconds: 900),
     );
 
-    _fade = Tween<double>(
-      begin: 0,
-      end: 1,
+    _fade = Tween(
+      begin: 0.0,
+      end: 1.0,
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
 
-    _scale = Tween<double>(
+    _scale = Tween(
       begin: 0.92,
-      end: 1,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.elasticOut));
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
 
-    _slide = Tween<Offset>(
+    _slide = Tween(
       begin: const Offset(0, 0.12),
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
@@ -59,12 +67,8 @@ class _HomeScreenState extends State<HomeScreen>
   // ================================================================
   // STREAM USER DATA
   // ================================================================
-  Stream<DocumentSnapshot> get userStream {
-    return FirebaseFirestore.instance
-        .collection("Users")
-        .doc(user!.uid)
-        .snapshots();
-  }
+  Stream<DocumentSnapshot> get userStream =>
+      FirebaseFirestore.instance.collection("Users").doc(user!.uid).snapshots();
 
   // ================================================================
   // UI BUILD
@@ -73,7 +77,6 @@ class _HomeScreenState extends State<HomeScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
-      appBar: _buildAppBar(),
       body: StreamBuilder<DocumentSnapshot>(
         stream: userStream,
         builder: (context, snapshot) {
@@ -86,14 +89,18 @@ class _HomeScreenState extends State<HomeScreen>
           final name = data?["name"] ?? "Bạn";
           final streak = data?["streak"] ?? 0;
           final progress = (data?["progress"] ?? 0.0).toDouble();
+          final avatarUrl = data?["avatarUrl"] as String?;
 
-          return FadeTransition(
-            opacity: _fade,
-            child: ScaleTransition(
-              scale: _scale,
-              child: SlideTransition(
-                position: _slide,
-                child: _buildBody(name, streak, progress),
+          return Scaffold(
+            appBar: _buildAppBar(avatarUrl),
+            body: FadeTransition(
+              opacity: _fade,
+              child: ScaleTransition(
+                scale: _scale,
+                child: SlideTransition(
+                  position: _slide,
+                  child: _buildBody(name, streak, progress),
+                ),
               ),
             ),
           );
@@ -105,7 +112,7 @@ class _HomeScreenState extends State<HomeScreen>
   // ================================================================
   // APP BAR
   // ================================================================
-  AppBar _buildAppBar() {
+  AppBar _buildAppBar(String? avatarUrl) {
     return AppBar(
       backgroundColor: Colors.white,
       elevation: 0.7,
@@ -136,12 +143,17 @@ class _HomeScreenState extends State<HomeScreen>
           color: Colors.teal.shade700,
           onPressed: () {},
         ),
-        const SizedBox(width: 6),
         Padding(
           padding: const EdgeInsets.only(right: 14),
           child: CircleAvatar(
+            radius: 18,
             backgroundColor: Colors.teal.shade200,
-            child: const Icon(Icons.person, color: Colors.white),
+            backgroundImage: avatarUrl != null && avatarUrl.isNotEmpty
+                ? NetworkImage(avatarUrl)
+                : null,
+            child: avatarUrl == null || avatarUrl.isEmpty
+                ? const Icon(Icons.person, color: Colors.white)
+                : null,
           ),
         ),
       ],
@@ -170,7 +182,7 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   // ================================================================
-  // HERO SECTION
+  // HERO
   // ================================================================
   Widget _buildHeroSection(String name, int streak) {
     return Container(
@@ -178,81 +190,37 @@ class _HomeScreenState extends State<HomeScreen>
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [Colors.teal.shade400, Colors.teal.shade700],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(22),
-        boxShadow: [
-          BoxShadow(
-            blurRadius: 12,
-            color: Colors.teal.shade300.withOpacity(0.4),
-            offset: const Offset(0, 4),
-          ),
-        ],
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Xin chào $name 👋",
-                  style: GoogleFonts.poppins(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  "Hôm nay bạn muốn học gì?",
-                  style: GoogleFonts.poppins(
-                    color: Colors.white.withOpacity(0.9),
-                    fontSize: 14,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.18),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Icons.local_fire_department,
-                        color: Colors.amber,
-                        size: 16,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        "Streak: $streak ngày",
-                        style: GoogleFonts.poppins(
-                          fontSize: 12,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+          Text(
+            "Xin chào $name 👋",
+            style: GoogleFonts.poppins(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
             ),
           ),
-          const SizedBox(width: 14),
-          const Icon(Icons.rocket_launch, size: 38, color: Colors.white),
+          const SizedBox(height: 6),
+          Text(
+            "Hôm nay bạn muốn học gì?",
+            style: GoogleFonts.poppins(color: Colors.white70),
+          ),
+          const SizedBox(height: 14),
+          Text(
+            "🔥 Streak: $streak ngày",
+            style: GoogleFonts.poppins(color: Colors.white),
+          ),
         ],
       ),
     );
   }
 
   // ================================================================
-  // PROGRESS CARD
+  // PROGRESS
   // ================================================================
   Widget _buildProgressCard(double progress) {
     return Container(
@@ -268,51 +236,17 @@ class _HomeScreenState extends State<HomeScreen>
               fontWeight: FontWeight.w700,
             ),
           ),
-          const SizedBox(height: 18),
-          _buildLinearProgress(progress),
-          const SizedBox(height: 10),
-          Text(
-            "Đã hoàn thành ${(progress * 100).toStringAsFixed(0)}%",
-            style: GoogleFonts.poppins(
-              fontSize: 14,
-              color: Colors.grey.shade600,
-            ),
+          const SizedBox(height: 12),
+          LinearProgressIndicator(
+            value: progress,
+            minHeight: 10,
+            backgroundColor: Colors.grey.shade300,
+            color: Colors.teal,
           ),
+          const SizedBox(height: 8),
+          Text("Hoàn thành ${(progress * 100).toInt()}%"),
         ],
       ),
-    );
-  }
-
-  Widget _buildLinearProgress(double value) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return TweenAnimationBuilder<double>(
-          tween: Tween(begin: 0, end: value),
-          duration: const Duration(milliseconds: 1200),
-          curve: Curves.easeOut,
-          builder: (context, v, child) {
-            return Stack(
-              children: [
-                Container(
-                  height: 12,
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                ),
-                Container(
-                  height: 12,
-                  width: constraints.maxWidth * v,
-                  decoration: BoxDecoration(
-                    color: Colors.teal,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                ),
-              ],
-            );
-          },
-        );
-      },
     );
   }
 
@@ -321,46 +255,43 @@ class _HomeScreenState extends State<HomeScreen>
   // ================================================================
   Widget _buildQuickActions() {
     final items = [
-      {'icon': Icons.play_arrow, 'label': "Tiếp tục"},
-      {'icon': Icons.list_alt, 'label': "Lộ trình"},
-      {'icon': Icons.quiz_rounded, 'label': "Quiz"},
-      {'icon': Icons.notifications, 'label': "Nhắc nhở"},
+      {"icon": Icons.play_arrow, "label": "Tiếp tục"},
+      {"icon": Icons.list_alt, "label": "Lộ trình"},
+      {"icon": Icons.quiz, "label": "Quiz"},
+      {"icon": Icons.notifications, "label": "Nhắc nhở"},
     ];
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: items.map((e) => _quickAction(e)).toList(),
-    );
-  }
-
-  Widget _quickAction(Map e) {
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: Colors.teal.shade50,
-            shape: BoxShape.circle,
-          ),
-          child: Icon(e['icon'], color: Colors.teal),
-        ),
-        const SizedBox(height: 6),
-        Text(e['label'], style: GoogleFonts.poppins(fontSize: 12)),
-      ],
+      children: items.map((e) {
+        return Column(
+          children: [
+            CircleAvatar(
+              backgroundColor: Colors.teal.shade50,
+              child: Icon(e["icon"] as IconData, color: Colors.teal),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              e["label"] as String,
+              style: GoogleFonts.poppins(fontSize: 12),
+            ),
+          ],
+        );
+      }).toList(),
     );
   }
 
   // ================================================================
-  // FEATURED TOPICS
+  // FEATURED TOPICS (CLICKABLE)
   // ================================================================
   Widget _buildFeaturedTopics() {
-    final List<Map<String, dynamic>> topics = [
-      {"name": "Flutter", "color": Colors.blue},
-      {"name": "Frontend", "color": Colors.orange},
-      {"name": "AI & Data", "color": Colors.purple},
-      {"name": "Thiết kế", "color": Colors.pink},
-      {"name": "Kỹ năng mềm", "color": Colors.teal},
-      {"name": "Ngôn ngữ", "color": Colors.green},
+    final topics = [
+      {"name": "Flutter", "icon": Icons.flutter_dash, "color": Colors.blue},
+      {"name": "Frontend", "icon": Icons.web, "color": Colors.orange},
+      {"name": "AI & Data", "icon": Icons.auto_graph, "color": Colors.purple},
+      {"name": "Thiết kế", "icon": Icons.palette, "color": Colors.pink},
+      {"name": "Kỹ năng mềm", "icon": Icons.psychology, "color": Colors.teal},
+      {"name": "Ngôn ngữ", "icon": Icons.language, "color": Colors.green},
     ];
 
     return Column(
@@ -377,30 +308,31 @@ class _HomeScreenState extends State<HomeScreen>
           itemCount: topics.length,
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 3,
-            crossAxisSpacing: 12,
             mainAxisSpacing: 12,
-            childAspectRatio: 1,
+            crossAxisSpacing: 12,
           ),
           itemBuilder: (context, i) {
-            return Container(
-              decoration: _card(),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.circle,
-                    color: topics[i]["color"] as Color,
-                    size: 20,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    topics[i]["name"] as String,
-                    style: GoogleFonts.poppins(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
+            final t = topics[i];
+            return InkWell(
+              borderRadius: BorderRadius.circular(16),
+              onTap: () => _openTopic(context, t["name"] as String),
+              child: Container(
+                decoration: _card(),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      t["icon"] as IconData,
+                      color: t["color"] as Color,
+                      size: 28,
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 8),
+                    Text(
+                      t["name"] as String,
+                      style: GoogleFonts.poppins(fontSize: 12),
+                    ),
+                  ],
+                ),
               ),
             );
           },
@@ -410,23 +342,31 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   // ================================================================
+  // NAVIGATION
+  // ================================================================
+  void _openTopic(BuildContext context, String name) {
+    final map = {
+      "Flutter": const FlutterPage(),
+      "Frontend": const FrontendPage(),
+      "AI & Data": const AiDataPage(),
+      "Thiết kế": const DesignPage(),
+      "Kỹ năng mềm": const SoftSkillsPage(),
+      "Ngôn ngữ": const LanguagePage(),
+    };
+
+    Navigator.push(context, MaterialPageRoute(builder: (_) => map[name]!));
+  }
+
+  // ================================================================
   // QUOTE
   // ================================================================
   Widget _buildQuote() {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: _card().copyWith(
-        gradient: LinearGradient(
-          colors: [Colors.purple.shade50, Colors.blue.shade50],
-        ),
-      ),
+      decoration: _card(),
       child: Text(
         "“Học mỗi ngày để trở thành phiên bản tốt hơn của chính bạn.”",
-        style: GoogleFonts.poppins(
-          fontSize: 15,
-          fontStyle: FontStyle.italic,
-          color: Colors.grey.shade800,
-        ),
+        style: GoogleFonts.poppins(fontStyle: FontStyle.italic),
       ),
     );
   }
@@ -434,17 +374,15 @@ class _HomeScreenState extends State<HomeScreen>
   // ================================================================
   // CARD STYLE
   // ================================================================
-  BoxDecoration _card() {
-    return BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(16),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.grey.shade300.withOpacity(0.4),
-          blurRadius: 12,
-          offset: const Offset(0, 4),
-        ),
-      ],
-    );
-  }
+  BoxDecoration _card() => BoxDecoration(
+    color: Colors.white,
+    borderRadius: BorderRadius.circular(16),
+    boxShadow: [
+      BoxShadow(
+        color: Colors.grey.shade300.withOpacity(0.5),
+        blurRadius: 10,
+        offset: const Offset(0, 4),
+      ),
+    ],
+  );
 }
