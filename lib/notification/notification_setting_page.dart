@@ -93,7 +93,11 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
               ],
             ),
           ),
-          Switch(value: value, onChanged: onChanged, activeThumbColor: Colors.teal),
+          Switch(
+            value: value,
+            onChanged: onChanged,
+            activeTrackColor: Colors.teal,
+          ),
         ],
       ),
     );

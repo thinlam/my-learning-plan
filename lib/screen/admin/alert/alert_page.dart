@@ -135,7 +135,7 @@ class _AlertTypeCardState extends State<_AlertTypeCard> {
               ),
               Switch(
                 value: enabled,
-                activeThumbColor: widget.color,
+                activeTrackColor: widget.color,
                 onChanged: (v) => setState(() => enabled = v),
               ),
             ],
