@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:my_learning_plan/screen/admin/material/material_page.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
+// Auth
+import 'package:my_learning_plan/auth/login_page.dart';
+
+// Pages
 import 'learning_path/learning_path_page.dart';
 import 'personal_path/personal_path_page.dart';
 import 'template_path/template_path_page.dart';
@@ -12,12 +16,46 @@ import 'report/report_page.dart';
 import 'community/community_page.dart';
 import 'reward/reward_page.dart';
 import 'focus/focus_page.dart';
+import 'material/material_page.dart';
 
 class AdminDashboard extends StatelessWidget {
   const AdminDashboard({super.key});
 
   void _go(BuildContext c, Widget p) {
     Navigator.push(c, MaterialPageRoute(builder: (_) => p));
+  }
+
+  // ================= LOGOUT =================
+  Future<void> _logout(BuildContext context) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text("Đăng xuất"),
+        content: const Text(
+          "Bạn có chắc chắn muốn đăng xuất khỏi hệ thống Admin?",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text("Hủy"),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text("Đăng xuất"),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      await FirebaseAuth.instance.signOut();
+
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const LoginPage()),
+        (route) => false,
+      );
+    }
   }
 
   @override
@@ -29,13 +67,18 @@ class AdminDashboard extends StatelessWidget {
         backgroundColor: Colors.indigo,
         title: const Text("Admin Dashboard"),
         centerTitle: true,
+        actions: [
+          IconButton(
+            tooltip: "Đăng xuất",
+            icon: const Icon(Icons.logout),
+            onPressed: () => _logout(context),
+          ),
+        ],
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // ===== HEADER =====
           const _AdminHeader(),
-
           const SizedBox(height: 24),
 
           // ===== QUẢN LÝ CHÍNH =====
@@ -122,6 +165,17 @@ class AdminDashboard extends StatelessWidget {
             subtitle: "Pomodoro – tập trung",
             onTap: () => _go(context, const FocusPage()),
           ),
+
+          const SizedBox(height: 24),
+
+          // ===== ĐĂNG XUẤT (PHỤ) =====
+          const _SectionTitle("Tài khoản"),
+          _AdminCard(
+            icon: Icons.logout,
+            title: "Đăng xuất",
+            subtitle: "Thoát khỏi hệ thống Admin",
+            onTap: () => _logout(context),
+          ),
         ],
       ),
     );
@@ -159,7 +213,7 @@ class _AdminHeader extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: const [
                 Text(
-                  "Xin chào, Admin 👋",
+                  "Xin chào, Admin",
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 16,

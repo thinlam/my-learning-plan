@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:provider/provider.dart';
 
-import 'firebase_options.dart'; // ⭐ File auto tạo sau khi chạy flutterfire configure
-import 'auth/login_page.dart'; // ⭐ Trang login của em
+import 'firebase_options.dart';
+import 'auth/login_page.dart';
+import 'core/locale/locale_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -11,7 +14,12 @@ void main() async {
   // ⭐ KHỞI TẠO FIREBASE
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => LocaleProvider(),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -19,14 +27,33 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final locale = context.watch<LocaleProvider>().locale;
+
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: "StudyMate - Learning App",
+
+      // 🌍 ĐA NGÔN NGỮ
+      locale: locale,
+      supportedLocales: const [
+        Locale('vi'),
+        Locale('en'),
+        Locale('ja'),
+        Locale('ko'),
+      ],
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+
       theme: ThemeData(
         scaffoldBackgroundColor: Colors.grey.shade100,
         primaryColor: Colors.teal,
         useMaterial3: true,
+        textTheme: GoogleFonts.poppinsTextTheme(),
       ),
+
       home: const SplashAnimation(), // ⭐ Splash → Login
     );
   }
@@ -69,8 +96,9 @@ class _SplashAnimationState extends State<SplashAnimation>
 
     _controller.forward();
 
-    // ⭐⭐ SAU 1.5 GIÂY → CHUYỂN SANG LOGIN ⭐⭐
+    // ⭐ SAU 1.5 GIÂY → LOGIN
     Future.delayed(const Duration(milliseconds: 1500), () {
+      if (!mounted) return;
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const LoginPage()),

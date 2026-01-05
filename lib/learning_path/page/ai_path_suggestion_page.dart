@@ -8,6 +8,8 @@ import '../Ai/ai_rules.dart';
 
 // UI
 import 'path_detail_page.dart';
+import '../../screen/home/page/home_page.dart';
+import '../../screen/home/page/navigation_page.dart';
 
 class AiPathSuggestionPage extends StatelessWidget {
   /// 🔥 Profile từ khảo sát
@@ -51,8 +53,7 @@ class AiPathSuggestionPage extends StatelessWidget {
     final List<AiLearningPath> aiSuggestions =
         AiRecommendationService.suggestPaths(profile, limit: 3);
 
-    final int bestScore =
-        aiSuggestions.isEmpty ? 0 : aiSuggestions.first.score;
+    final int bestScore = aiSuggestions.isEmpty ? 0 : aiSuggestions.first.score;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F6FA),
@@ -61,12 +62,21 @@ class AiPathSuggestionPage extends StatelessWidget {
         elevation: 0,
         foregroundColor: Colors.black87,
         centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const NavigationPage(initialIndex: 0),
+              ),
+              (route) => false,
+            );
+          },
+        ),
         title: Text(
           "AI gợi ý lộ trình",
-          style: GoogleFonts.poppins(
-            fontSize: 17,
-            fontWeight: FontWeight.w700,
-          ),
+          style: GoogleFonts.poppins(fontSize: 17, fontWeight: FontWeight.w700),
         ),
       ),
       body: ListView(
@@ -87,9 +97,7 @@ class AiPathSuggestionPage extends StatelessWidget {
           if (aiSuggestions.isEmpty)
             _noSuggestions()
           else
-            ...aiSuggestions.map(
-              (path) => _buildPathCard(context, path),
-            ),
+            ...aiSuggestions.map((path) => _buildPathCard(context, path)),
         ],
       ),
     );
@@ -207,9 +215,7 @@ class AiPathSuggestionPage extends StatelessWidget {
         onTap: () {
           Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (_) => PathDetailPage(path: path),
-            ),
+            MaterialPageRoute(builder: (_) => PathDetailPage(path: path)),
           );
         },
         child: Column(
@@ -311,10 +317,7 @@ class AiPathSuggestionPage extends StatelessWidget {
         const SizedBox(width: 4),
         Text(
           text,
-          style: GoogleFonts.poppins(
-            fontSize: 11,
-            color: Colors.white,
-          ),
+          style: GoogleFonts.poppins(fontSize: 11, color: Colors.white),
         ),
       ],
     );

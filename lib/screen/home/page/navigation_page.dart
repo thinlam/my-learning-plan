@@ -4,16 +4,19 @@ import 'package:flutter/material.dart';
 import 'home_page.dart';
 import 'profile_page.dart';
 
-// ⭐ Import Learning Path
+// Learning Path
 import '../../../learning_path/page/path_selection_page.dart';
 
-// ⭐ Import Progress Page
+// Progress Page
 import '../../../progress/progress_page.dart';
-// ⭐ import notidication
+
+// Notification
 import '../../../notification/notification_page.dart';
 
 class NavigationPage extends StatefulWidget {
-  const NavigationPage({super.key});
+  final int initialIndex;
+
+  const NavigationPage({super.key, this.initialIndex = 0});
 
   @override
   State<NavigationPage> createState() => _NavigationPageState();
@@ -21,7 +24,7 @@ class NavigationPage extends StatefulWidget {
 
 class _NavigationPageState extends State<NavigationPage>
     with SingleTickerProviderStateMixin {
-  int _currentIndex = 0;
+  late int _currentIndex;
 
   late AnimationController _controller;
   late Animation<double> _fade;
@@ -30,6 +33,9 @@ class _NavigationPageState extends State<NavigationPage>
   @override
   void initState() {
     super.initState();
+
+    // ⭐ LẤY initialIndex TỪ WIDGET
+    _currentIndex = widget.initialIndex;
 
     _controller = AnimationController(
       vsync: this,
@@ -55,13 +61,13 @@ class _NavigationPageState extends State<NavigationPage>
     super.dispose();
   }
 
-  // ⭐ DANH SÁCH MÀN HÌNH (ĐÃ THÊM PROGRESS PAGE)
-  late final List<Widget> _screens = [
-    const HomeScreen(),
-    const PathSelectionPage(),
-    const ProgressPage(), // ⭐ Thêm tab Tiến độ học
-    const NotificationsPage(),
-    const ProfilePage(),
+  // ⭐ DANH SÁCH MÀN HÌNH
+  late final List<Widget> _screens = const [
+    HomeScreen(),
+    PathSelectionPage(),
+    ProgressPage(),
+    NotificationsPage(),
+    ProfilePage(),
   ];
 
   @override
@@ -78,7 +84,7 @@ class _NavigationPageState extends State<NavigationPage>
     );
   }
 
-  // ⭐ BOTTOM NAVIGATION BAR (ĐÃ THÊM TAB TIẾN ĐỘ)
+  // ⭐ BOTTOM NAVIGATION BAR
   Widget _buildBottomBar() {
     return NavigationBar(
       height: 68,
@@ -94,11 +100,7 @@ class _NavigationPageState extends State<NavigationPage>
       destinations: [
         _navItem(Icons.home_outlined, Icons.home, "Trang chủ"),
         _navItem(Icons.explore_outlined, Icons.explore, "Khám phá"),
-        _navItem(
-          Icons.insights_outlined,
-          Icons.insights,
-          "Tiến độ",
-        ), // ⭐ Tab mới
+        _navItem(Icons.insights_outlined, Icons.insights, "Tiến độ"),
         _navItem(
           Icons.notifications_outlined,
           Icons.notifications,
