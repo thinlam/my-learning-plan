@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:my_learning_plan/forum/forum_ui.dart';
 
 // Import các màn hình trong app
 import 'home_page.dart';
@@ -16,10 +17,7 @@ import '../../../notification/notification_page.dart';
 class NavigationPage extends StatefulWidget {
   final int initialIndex;
 
-  const NavigationPage({
-    super.key,
-    this.initialIndex = 0,
-  });
+  const NavigationPage({super.key, this.initialIndex = 0});
 
   @override
   State<NavigationPage> createState() => _NavigationPageState();
@@ -39,6 +37,7 @@ class _NavigationPageState extends State<NavigationPage> {
     HomeScreen(),
     PathSelectionPage(),
     ProgressPage(),
+    ForumUI(),
     NotificationsPage(),
     ProfilePage(),
   ];
@@ -51,8 +50,7 @@ class _NavigationPageState extends State<NavigationPage> {
         switchInCurve: Curves.easeOut,
         switchOutCurve: Curves.easeIn,
         transitionBuilder: (child, animation) {
-          final fade =
-              Tween<double>(begin: 0, end: 1).animate(animation);
+          final fade = Tween<double>(begin: 0, end: 1).animate(animation);
           final slide = Tween<Offset>(
             begin: const Offset(0, 0.05),
             end: Offset.zero,
@@ -60,10 +58,7 @@ class _NavigationPageState extends State<NavigationPage> {
 
           return FadeTransition(
             opacity: fade,
-            child: SlideTransition(
-              position: slide,
-              child: child,
-            ),
+            child: SlideTransition(position: slide, child: child),
           );
         },
         child: KeyedSubtree(
@@ -104,6 +99,11 @@ class _NavigationPageState extends State<NavigationPage> {
           icon: Icon(Icons.insights_outlined),
           selectedIcon: Icon(Icons.insights, color: Colors.teal),
           label: "Tiến độ",
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.forum_outlined),
+          selectedIcon: Icon(Icons.forum, color: Colors.teal),
+          label: "Diễn đàn",
         ),
         NavigationDestination(
           icon: Icon(Icons.notifications_outlined),
