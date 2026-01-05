@@ -4,11 +4,11 @@ import 'package:google_fonts/google_fonts.dart';
 // Firebase
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:my_learning_plan/auth/change_password_page.dart';
+import 'package:my_learning_plan/screen/home/Change_Password/change_password.dart';
 
 import 'package:my_learning_plan/auth/login_page.dart';
 import 'package:my_learning_plan/notification/notification_page.dart';
-import 'package:my_learning_plan/screen/home/Change_Password/change_password.dart';
+
 import 'package:my_learning_plan/screen/profile/edit_profile_page.dart';
 import 'package:my_learning_plan/screen/settings/language_page.dart';
 

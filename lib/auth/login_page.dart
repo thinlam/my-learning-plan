@@ -4,13 +4,13 @@ import 'package:google_fonts/google_fonts.dart';
 // Firebase
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:my_learning_plan/screen/admin/admin_dashboard.dart';
-import '../screen/home/page/navigation_page.dart';
 
 // Pages
 import 'register_page.dart';
 import '../auth/forgot_password.dart';
-import '../screen/survey/survey_page.dart';
+import '../learning_path/page/survey_page.dart';
+import '../screen/home/page/navigation_page.dart';
+import 'package:my_learning_plan/screen/admin/admin_dashboard.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -23,6 +23,7 @@ class _LoginPageState extends State<LoginPage>
     with SingleTickerProviderStateMixin {
   final email = TextEditingController();
   final password = TextEditingController();
+
   bool obscure = true;
   bool isLoading = false;
 
@@ -43,21 +44,19 @@ class _LoginPageState extends State<LoginPage>
       vsync: this,
     );
 
-    _bgPulse = Tween<double>(begin: 0.0, end: 1.0).animate(
+    _bgPulse = Tween<double>(
+      begin: 0,
+      end: 1,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+
+    _headerFade = Tween<double>(begin: 0, end: 1).animate(
       CurvedAnimation(
         parent: _controller,
-        curve: const Interval(0.0, 1.0, curve: Curves.easeOutQuad),
+        curve: const Interval(0, 0.4, curve: Curves.easeOut),
       ),
     );
 
-    _headerFade = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0.0, 0.4, curve: Curves.easeOut),
-      ),
-    );
-
-    _cardFade = Tween<double>(begin: 0.0, end: 1.0).animate(
+    _cardFade = Tween<double>(begin: 0, end: 1).animate(
       CurvedAnimation(
         parent: _controller,
         curve: const Interval(0.2, 0.9, curve: Curves.easeOut),
@@ -72,10 +71,10 @@ class _LoginPageState extends State<LoginPage>
           ),
         );
 
-    _buttonScale = Tween<double>(begin: 0.9, end: 1.0).animate(
+    _buttonScale = Tween<double>(begin: 0.9, end: 1).animate(
       CurvedAnimation(
         parent: _controller,
-        curve: const Interval(0.5, 1.0, curve: Curves.elasticOut),
+        curve: const Interval(0.5, 1, curve: Curves.elasticOut),
       ),
     );
 
@@ -102,17 +101,16 @@ class _LoginPageState extends State<LoginPage>
     );
   }
 
-  // 🔥 LOGIN FIREBASE + PHÂN QUYỀN
+  // ================= LOGIN =================
   Future<void> _login() async {
     if (email.text.trim().isEmpty || password.text.isEmpty) {
-      _showMessage('Vui lòng nhập đầy đủ Email và Mật khẩu');
+      _showMessage("Vui lòng nhập đầy đủ Email và Mật khẩu");
       return;
     }
 
     setState(() => isLoading = true);
 
     try {
-      // 1️⃣ Firebase Auth
       final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: email.text.trim(),
         password: password.text.trim(),
@@ -120,7 +118,6 @@ class _LoginPageState extends State<LoginPage>
 
       final uid = credential.user!.uid;
 
-      // 2️⃣ Firestore user document
       final userDoc = await FirebaseFirestore.instance
           .collection('Users')
           .doc(uid)
@@ -128,7 +125,7 @@ class _LoginPageState extends State<LoginPage>
 
       if (!userDoc.exists) {
         setState(() => isLoading = false);
-        _showMessage("Tài khoản chưa có dữ liệu trong Firestore!");
+        _showMessage("Tài khoản chưa có dữ liệu!");
         return;
       }
 
@@ -138,15 +135,14 @@ class _LoginPageState extends State<LoginPage>
 
       setState(() => isLoading = false);
 
-      // 3️⃣ ĐIỀU HƯỚNG ĐÚNG NGHIỆP VỤ
+      // ===== ĐIỀU HƯỚNG =====
       Widget nextPage;
-
       if (role == 'admin') {
         nextPage = const AdminDashboard();
       } else {
         nextPage = surveyCompleted
-            ? const NavigationPage() // ✅ ĐÃ KHẢO SÁT
-            : const SurveyPage(); // ❌ CHƯA KHẢO SÁT
+            ? const NavigationPage()
+            : const SurveyPage();
       }
 
       Navigator.pushReplacement(
@@ -159,7 +155,6 @@ class _LoginPageState extends State<LoginPage>
               parent: animation,
               curve: Curves.easeOutCubic,
             );
-
             return FadeTransition(
               opacity: curved,
               child: SlideTransition(
@@ -175,17 +170,16 @@ class _LoginPageState extends State<LoginPage>
       );
     } on FirebaseAuthException catch (e) {
       setState(() => isLoading = false);
-
       if (e.code == 'user-not-found') {
         _showMessage("Email không tồn tại");
       } else if (e.code == 'wrong-password') {
         _showMessage("Sai mật khẩu");
       } else {
-        _showMessage("Lỗi đăng nhập: ${e.message}");
+        _showMessage(e.message ?? "Đăng nhập thất bại");
       }
     } catch (e) {
       setState(() => isLoading = false);
-      _showMessage("Có lỗi xảy ra: $e");
+      _showMessage("Có lỗi xảy ra");
     }
   }
 
@@ -194,13 +188,11 @@ class _LoginPageState extends State<LoginPage>
     final size = MediaQuery.of(context).size;
 
     return Scaffold(
-      backgroundColor: Colors.white,
       body: AnimatedBuilder(
         animation: _bgPulse,
-        builder: (context, child) {
+        builder: (_, __) {
           return Stack(
             children: [
-              // Background gradient
               Container(
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
@@ -211,308 +203,55 @@ class _LoginPageState extends State<LoginPage>
                 ),
               ),
 
-              // Bubble 1
               Positioned(
                 top: -80 * (1 - _bgPulse.value),
                 left: -40,
-                // ignore: deprecated_member_use
                 child: _blurCircle(160, Colors.teal.withOpacity(0.25)),
               ),
-
-              // Bubble 2
               Positioned(
                 top: size.height * 0.28,
                 right: -50 * (1 - _bgPulse.value),
-                // ignore: deprecated_member_use
                 child: _blurCircle(140, Colors.blue.withOpacity(0.18)),
               ),
-
-              // Bubble 3
               Positioned(
                 bottom: -60,
                 left: size.width * 0.3,
-                // ignore: deprecated_member_use
                 child: _blurCircle(120, Colors.tealAccent.withOpacity(0.18)),
               ),
 
               SafeArea(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 24,
-                  ),
+                  padding: const EdgeInsets.all(24),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      const SizedBox(height: 14),
-
                       FadeTransition(
                         opacity: _headerFade,
                         child: Column(
                           children: [
-                            Container(
-                              padding: const EdgeInsets.all(14),
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.white,
-                                boxShadow: [
-                                  BoxShadow(
-                                    // ignore: deprecated_member_use
-                                    color: Colors.black.withOpacity(0.08),
-                                    blurRadius: 18,
-                                    offset: const Offset(0, 10),
-                                  ),
-                                ],
-                              ),
-                              child: Icon(
-                                Icons.lock_outline_rounded,
-                                size: 48,
-                                color: Colors.teal.shade600,
-                              ),
+                            Icon(
+                              Icons.lock_outline,
+                              size: 50,
+                              color: Colors.teal,
                             ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: 12),
                             Text(
                               "Chào mừng trở lại",
                               style: GoogleFonts.poppins(
                                 fontSize: 22,
                                 fontWeight: FontWeight.w700,
-                                color: Colors.teal.shade800,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              "Đăng nhập để tiếp tục hành trình học tập của bạn",
-                              textAlign: TextAlign.center,
-                              style: GoogleFonts.poppins(
-                                fontSize: 13,
-                                color: Colors.grey.shade700,
                               ),
                             ),
                           ],
                         ),
                       ),
-
-                      const SizedBox(height: 26),
-
+                      const SizedBox(height: 24),
                       FadeTransition(
                         opacity: _cardFade,
                         child: SlideTransition(
                           position: _cardSlide,
-                          child: Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.fromLTRB(18, 18, 18, 20),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(20),
-                              boxShadow: [
-                                BoxShadow(
-                                  // ignore: deprecated_member_use
-                                  color: Colors.black.withOpacity(0.08),
-                                  blurRadius: 24,
-                                  offset: const Offset(0, 14),
-                                ),
-                              ],
-                            ),
-                            child: Column(
-                              children: [
-                                Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: Text(
-                                    "Email",
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w500,
-                                      color: Colors.grey.shade800,
-                                    ),
-                                  ),
-                                ),
-
-                                const SizedBox(height: 6),
-
-                                TextField(
-                                  controller: email,
-                                  keyboardType: TextInputType.emailAddress,
-                                  decoration: InputDecoration(
-                                    hintText: "Nhập email của bạn",
-                                    hintStyle: GoogleFonts.poppins(
-                                      fontSize: 13,
-                                      color: Colors.grey[400],
-                                    ),
-                                    prefixIcon: const Icon(
-                                      Icons.email_outlined,
-                                      color: Colors.teal,
-                                    ),
-                                    filled: true,
-                                    fillColor: const Color(0xFFF7F8FA),
-                                    contentPadding: const EdgeInsets.symmetric(
-                                      vertical: 12,
-                                      horizontal: 14,
-                                    ),
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(14),
-                                      borderSide: BorderSide.none,
-                                    ),
-                                  ),
-                                ),
-
-                                const SizedBox(height: 16),
-
-                                Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: Text(
-                                    "Mật khẩu",
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w500,
-                                      color: Colors.grey.shade800,
-                                    ),
-                                  ),
-                                ),
-
-                                const SizedBox(height: 6),
-
-                                TextField(
-                                  controller: password,
-                                  obscureText: obscure,
-                                  decoration: InputDecoration(
-                                    hintText: "Nhập mật khẩu",
-                                    hintStyle: GoogleFonts.poppins(
-                                      fontSize: 13,
-                                      color: Colors.grey[400],
-                                    ),
-                                    prefixIcon: const Icon(
-                                      Icons.lock_outline,
-                                      color: Colors.teal,
-                                    ),
-                                    suffixIcon: IconButton(
-                                      icon: Icon(
-                                        obscure
-                                            ? Icons.visibility_off
-                                            : Icons.visibility,
-                                        color: Colors.grey,
-                                      ),
-                                      onPressed: () =>
-                                          setState(() => obscure = !obscure),
-                                    ),
-                                    filled: true,
-                                    fillColor: const Color(0xFFF7F8FA),
-                                    contentPadding: const EdgeInsets.symmetric(
-                                      vertical: 12,
-                                      horizontal: 14,
-                                    ),
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(14),
-                                      borderSide: BorderSide.none,
-                                    ),
-                                  ),
-                                ),
-
-                                const SizedBox(height: 8),
-
-                                Align(
-                                  alignment: Alignment.centerRight,
-                                  child: TextButton(
-                                    style: TextButton.styleFrom(
-                                      padding: EdgeInsets.zero,
-                                    ),
-                                    onPressed: () => Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) =>
-                                            const ForgotPasswordPage(),
-                                      ),
-                                    ),
-                                    child: Text(
-                                      "Quên mật khẩu?",
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 12,
-                                        color: Colors.teal,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-
-                                const SizedBox(height: 10),
-
-                                ScaleTransition(
-                                  scale: _buttonScale,
-                                  child: SizedBox(
-                                    width: double.infinity,
-                                    child: ElevatedButton(
-                                      onPressed: isLoading ? null : _login,
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.teal,
-                                        padding: const EdgeInsets.symmetric(
-                                          vertical: 14,
-                                        ),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            14,
-                                          ),
-                                        ),
-                                        elevation: 3,
-                                      ),
-                                      child: isLoading
-                                          ? SizedBox(
-                                              height: 18,
-                                              width: 18,
-                                              child: CircularProgressIndicator(
-                                                strokeWidth: 2.4,
-                                                valueColor:
-                                                    AlwaysStoppedAnimation(
-                                                      Colors.white,
-                                                    ),
-                                              ),
-                                            )
-                                          : Text(
-                                              "Đăng nhập",
-                                              style: GoogleFonts.poppins(
-                                                fontSize: 15,
-                                                color: Colors.white,
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                            ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                          child: _loginCard(),
                         ),
                       ),
-
-                      const SizedBox(height: 20),
-
-                      FadeTransition(
-                        opacity: _cardFade,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              "Chưa có tài khoản?",
-                              style: GoogleFonts.poppins(fontSize: 13),
-                            ),
-                            TextButton(
-                              onPressed: () => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => const RegisterPage(),
-                                ),
-                              ),
-                              child: Text(
-                                "Đăng ký ngay",
-                                style: GoogleFonts.poppins(
-                                  color: Colors.teal,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      const SizedBox(height: 10),
                     ],
                   ),
                 ),
@@ -524,7 +263,78 @@ class _LoginPageState extends State<LoginPage>
     );
   }
 
-  // Bubble UI
+  Widget _loginCard() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 24,
+            offset: const Offset(0, 14),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          _input("Email", email, Icons.email, false),
+          const SizedBox(height: 14),
+          _input("Mật khẩu", password, Icons.lock, true),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton(
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ForgotPasswordPage()),
+              ),
+              child: const Text("Quên mật khẩu?"),
+            ),
+          ),
+          ScaleTransition(
+            scale: _buttonScale,
+            child: ElevatedButton(
+              onPressed: isLoading ? null : _login,
+              child: isLoading
+                  ? const CircularProgressIndicator(color: Colors.white)
+                  : const Text("Đăng nhập"),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const RegisterPage()),
+            ),
+            child: const Text("Chưa có tài khoản? Đăng ký"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _input(
+    String label,
+    TextEditingController ctrl,
+    IconData icon,
+    bool pass,
+  ) {
+    return TextField(
+      controller: ctrl,
+      obscureText: pass ? obscure : false,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon),
+        suffixIcon: pass
+            ? IconButton(
+                icon: Icon(obscure ? Icons.visibility_off : Icons.visibility),
+                onPressed: () => setState(() => obscure = !obscure),
+              )
+            : null,
+      ),
+    );
+  }
+
   Widget _blurCircle(double size, Color color) {
     return Container(
       width: size,

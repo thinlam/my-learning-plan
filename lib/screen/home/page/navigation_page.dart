@@ -4,73 +4,70 @@ import 'package:flutter/material.dart';
 import 'home_page.dart';
 import 'profile_page.dart';
 
-// ⭐ Import Learning Path
+// Learning Path
 import '../../../learning_path/page/path_selection_page.dart';
 
-// ⭐ Import Progress Page
+// Progress Page
 import '../../../progress/progress_page.dart';
-// ⭐ import notidication
+
+// Notification
 import '../../../notification/notification_page.dart';
 
 class NavigationPage extends StatefulWidget {
-  const NavigationPage({super.key});
+  final int initialIndex;
+
+  const NavigationPage({
+    super.key,
+    this.initialIndex = 0,
+  });
 
   @override
   State<NavigationPage> createState() => _NavigationPageState();
 }
 
-class _NavigationPageState extends State<NavigationPage>
-    with SingleTickerProviderStateMixin {
-  int _currentIndex = 0;
-
-  late AnimationController _controller;
-  late Animation<double> _fade;
-  late Animation<Offset> _slide;
+class _NavigationPageState extends State<NavigationPage> {
+  late int _currentIndex;
 
   @override
   void initState() {
     super.initState();
-
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 350),
-    );
-
-    _fade = Tween(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
-
-    _slide = Tween(
-      begin: const Offset(0, 0.05),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
-
-    _controller.forward();
+    _currentIndex = widget.initialIndex;
   }
 
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  // ⭐ DANH SÁCH MÀN HÌNH (ĐÃ THÊM PROGRESS PAGE)
-  late final List<Widget> _screens = [
-    const HomeScreen(),
-    const PathSelectionPage(),
-    const ProgressPage(), // ⭐ Thêm tab Tiến độ học
-    const NotificationsPage(),
-    const ProfilePage(),
+  // ⭐ DANH SÁCH MÀN HÌNH
+  final List<Widget> _screens = const [
+    HomeScreen(),
+    PathSelectionPage(),
+    ProgressPage(),
+    NotificationsPage(),
+    ProfilePage(),
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: FadeTransition(
-        opacity: _fade,
-        child: SlideTransition(
-          position: _slide,
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 300),
+        switchInCurve: Curves.easeOut,
+        switchOutCurve: Curves.easeIn,
+        transitionBuilder: (child, animation) {
+          final fade =
+              Tween<double>(begin: 0, end: 1).animate(animation);
+          final slide = Tween<Offset>(
+            begin: const Offset(0, 0.05),
+            end: Offset.zero,
+          ).animate(animation);
+
+          return FadeTransition(
+            opacity: fade,
+            child: SlideTransition(
+              position: slide,
+              child: child,
+            ),
+          );
+        },
+        child: KeyedSubtree(
+          key: ValueKey(_currentIndex), // ⭐ DÒNG QUAN TRỌNG
           child: _screens[_currentIndex],
         ),
       ),
@@ -78,7 +75,7 @@ class _NavigationPageState extends State<NavigationPage>
     );
   }
 
-  // ⭐ BOTTOM NAVIGATION BAR (ĐÃ THÊM TAB TIẾN ĐỘ)
+  // ⭐ BOTTOM NAVIGATION BAR
   Widget _buildBottomBar() {
     return NavigationBar(
       height: 68,
@@ -86,38 +83,39 @@ class _NavigationPageState extends State<NavigationPage>
       indicatorColor: Colors.teal.withOpacity(0.15),
       labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
       onDestinationSelected: (i) {
+        if (i == _currentIndex) return;
+
         setState(() {
           _currentIndex = i;
-          _controller.forward(from: 0);
         });
       },
-      destinations: [
-        _navItem(Icons.home_outlined, Icons.home, "Trang chủ"),
-        _navItem(Icons.explore_outlined, Icons.explore, "Khám phá"),
-        _navItem(
-          Icons.insights_outlined,
-          Icons.insights,
-          "Tiến độ",
-        ), // ⭐ Tab mới
-        _navItem(
-          Icons.notifications_outlined,
-          Icons.notifications,
-          "Thông báo",
+      destinations: const [
+        NavigationDestination(
+          icon: Icon(Icons.home_outlined),
+          selectedIcon: Icon(Icons.home, color: Colors.teal),
+          label: "Trang chủ",
         ),
-        _navItem(Icons.person_outline, Icons.person, "Cá nhân"),
+        NavigationDestination(
+          icon: Icon(Icons.explore_outlined),
+          selectedIcon: Icon(Icons.explore, color: Colors.teal),
+          label: "Khám phá",
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.insights_outlined),
+          selectedIcon: Icon(Icons.insights, color: Colors.teal),
+          label: "Tiến độ",
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.notifications_outlined),
+          selectedIcon: Icon(Icons.notifications, color: Colors.teal),
+          label: "Thông báo",
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.person_outline),
+          selectedIcon: Icon(Icons.person, color: Colors.teal),
+          label: "Cá nhân",
+        ),
       ],
-    );
-  }
-
-  NavigationDestination _navItem(
-    IconData icon,
-    IconData selected,
-    String label,
-  ) {
-    return NavigationDestination(
-      icon: Icon(icon),
-      selectedIcon: Icon(selected, color: Colors.teal),
-      label: label,
     );
   }
 }
