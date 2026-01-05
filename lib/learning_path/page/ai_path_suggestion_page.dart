@@ -1,21 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-// AI logic
+// AI
 import '../Ai/ai_learning_path_model.dart';
 import '../Ai/ai_recommendation_service.dart';
 import '../Ai/ai_rules.dart';
 
 // UI
 import 'path_detail_page.dart';
+import '../../screen/home/page/home_page.dart';
+import '../../screen/home/page/navigation_page.dart';
 
 class AiPathSuggestionPage extends StatelessWidget {
-  /// 🔥 Profile từ khảo sát (bắt buộc)
+  /// 🔥 Profile từ khảo sát
   final SurveyProfile profile;
 
   const AiPathSuggestionPage({super.key, required this.profile});
 
-  // ------------------- UI SUPPORT -------------------
+  // ================= UI SUPPORT =================
 
   Color _difficultyColor(String difficulty) {
     switch (difficulty.toLowerCase()) {
@@ -43,11 +45,11 @@ class AiPathSuggestionPage extends StatelessWidget {
     }
   }
 
-  // ------------------- MAIN UI -------------------
+  // ================= MAIN =================
 
   @override
   Widget build(BuildContext context) {
-    /// 👉 Lấy danh sách lộ trình AI đề xuất
+    /// 🤖 AI chạy tại đây – TOP 3
     final List<AiLearningPath> aiSuggestions =
         AiRecommendationService.suggestPaths(profile, limit: 3);
 
@@ -59,20 +61,32 @@ class AiPathSuggestionPage extends StatelessWidget {
         backgroundColor: Colors.white,
         elevation: 0,
         foregroundColor: Colors.black87,
+        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const NavigationPage(initialIndex: 0),
+              ),
+              (route) => false,
+            );
+          },
+        ),
         title: Text(
-          "Gợi ý lộ trình bằng AI",
+          "AI gợi ý lộ trình",
           style: GoogleFonts.poppins(fontSize: 17, fontWeight: FontWeight.w700),
         ),
       ),
-
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+        padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
         children: [
           _header(bestScore),
           const SizedBox(height: 18),
 
           Text(
-            "Các lộ trình phù hợp nhất",
+            "Top 3 lộ trình phù hợp nhất",
             style: GoogleFonts.poppins(
               fontSize: 14,
               fontWeight: FontWeight.w600,
@@ -89,7 +103,7 @@ class AiPathSuggestionPage extends StatelessWidget {
     );
   }
 
-  // ------------------- HEADER -------------------
+  // ================= HEADER =================
 
   Widget _header(int bestScore) {
     return Container(
@@ -109,7 +123,6 @@ class AiPathSuggestionPage extends StatelessWidget {
           ),
         ],
       ),
-
       child: Row(
         children: [
           Container(
@@ -124,9 +137,7 @@ class AiPathSuggestionPage extends StatelessWidget {
               size: 26,
             ),
           ),
-
           const SizedBox(width: 14),
-
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -140,19 +151,16 @@ class AiPathSuggestionPage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 4),
-
                 Text(
-                  "AI đề xuất lộ trình dựa trên: khối lớp, môn yêu thích, "
-                  "thời gian rảnh và mục tiêu học.",
+                  "AI đánh giá lộ trình dựa trên khảo sát của bạn "
+                  "(khối lớp, môn yêu thích, thời gian rảnh, mục tiêu học).",
                   style: GoogleFonts.poppins(
                     fontSize: 12,
                     height: 1.3,
                     color: Colors.white.withOpacity(0.9),
                   ),
                 ),
-
                 const SizedBox(height: 8),
-
                 Row(
                   children: [
                     const Icon(
@@ -178,7 +186,7 @@ class AiPathSuggestionPage extends StatelessWidget {
     );
   }
 
-  // ------------------- PATH CARD -------------------
+  // ================= PATH CARD =================
 
   Widget _buildPathCard(BuildContext context, AiLearningPath path) {
     final diffColor = _difficultyColor(path.difficulty);
@@ -186,7 +194,7 @@ class AiPathSuggestionPage extends StatelessWidget {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(18),
         gradient: LinearGradient(
@@ -202,22 +210,17 @@ class AiPathSuggestionPage extends StatelessWidget {
           ),
         ],
       ),
-
       child: InkWell(
         borderRadius: BorderRadius.circular(18),
         onTap: () {
           Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (_) => PathDetailPage(path: path), // ⭐ chuẩn 100%
-            ),
+            MaterialPageRoute(builder: (_) => PathDetailPage(path: path)),
           );
         },
-
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // TOP
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -232,9 +235,7 @@ class AiPathSuggestionPage extends StatelessWidget {
                     color: Colors.white,
                   ),
                 ),
-
                 const SizedBox(width: 12),
-
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -247,9 +248,7 @@ class AiPathSuggestionPage extends StatelessWidget {
                           color: Colors.white,
                         ),
                       ),
-
                       const SizedBox(height: 4),
-
                       Text(
                         path.description,
                         maxLines: 2,
@@ -263,9 +262,7 @@ class AiPathSuggestionPage extends StatelessWidget {
                     ],
                   ),
                 ),
-
                 const SizedBox(width: 8),
-
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
@@ -276,28 +273,21 @@ class AiPathSuggestionPage extends StatelessWidget {
                 ),
               ],
             ),
-
             const SizedBox(height: 10),
             const Divider(thickness: 0.4, color: Colors.white30),
             const SizedBox(height: 8),
-
-            // FOOTER
             Row(
               children: [
                 _iconText(
                   Icons.schedule_rounded,
-                  '${path.recommendedHoursPerWeek.toStringAsFixed(1)}h/tuần',
+                  '${path.recommendedHoursPerWeek}h/tuần',
                 ),
-
                 const SizedBox(width: 12),
-
                 _iconText(
                   Icons.menu_book_rounded,
                   '${path.lessonCount} bài học',
                 ),
-
                 const Spacer(),
-
                 Flexible(
                   child: Text(
                     'Môn trọng tâm: ${path.focusSubjects.join(', ')}',
@@ -317,6 +307,8 @@ class AiPathSuggestionPage extends StatelessWidget {
       ),
     );
   }
+
+  // ================= SMALL WIDGETS =================
 
   Widget _iconText(IconData icon, String text) {
     return Row(
@@ -338,23 +330,13 @@ class AiPathSuggestionPage extends StatelessWidget {
         color: Colors.white.withOpacity(0.18),
         borderRadius: BorderRadius.circular(20),
       ),
-      child: Row(
-        children: [
-          Icon(
-            Icons.bar_chart_rounded,
-            size: 14,
-            color: Colors.yellow.shade300,
-          ),
-          const SizedBox(width: 4),
-          Text(
-            '$score%',
-            style: GoogleFonts.poppins(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
-            ),
-          ),
-        ],
+      child: Text(
+        '$score%',
+        style: GoogleFonts.poppins(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: Colors.white,
+        ),
       ),
     );
   }
@@ -377,31 +359,20 @@ class AiPathSuggestionPage extends StatelessWidget {
     );
   }
 
-  // ------------------- EMPTY VIEW -------------------
+  // ================= EMPTY =================
 
   Widget _noSuggestions() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.grey.shade300),
       ),
-      child: Row(
-        children: [
-          Icon(Icons.info_outline, color: Colors.grey.shade600),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              "Chưa có đủ dữ liệu khảo sát.\n"
-              "Hãy hoàn thành khảo sát để AI gợi ý lộ trình phù hợp.",
-              style: GoogleFonts.poppins(
-                fontSize: 12.5,
-                color: Colors.grey.shade800,
-              ),
-            ),
-          ),
-        ],
+      child: Text(
+        "Chưa có đủ dữ liệu khảo sát.\n"
+        "Hãy hoàn thành khảo sát để AI gợi ý lộ trình.",
+        style: GoogleFonts.poppins(fontSize: 12.5),
       ),
     );
   }

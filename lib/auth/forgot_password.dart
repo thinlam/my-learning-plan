@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
   const ForgotPasswordPage({super.key});
@@ -9,47 +10,77 @@ class ForgotPasswordPage extends StatefulWidget {
 }
 
 class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
-  final email = TextEditingController();
+  final emailCtrl = TextEditingController();
+  bool loading = false;
 
-  void _sendEmail() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("Đã gửi email đặt lại mật khẩu!"),
-        backgroundColor: Colors.teal,
-      ),
-    );
+  Future<void> _sendResetEmail() async {
+    if (!emailCtrl.text.contains('@')) {
+      _show("Email không hợp lệ");
+      return;
+    }
+
+    setState(() => loading = true);
+
+    try {
+      await FirebaseAuth.instance.sendPasswordResetEmail(
+        email: emailCtrl.text.trim(),
+      );
+
+      _show("Đã gửi email đặt lại mật khẩu. Vui lòng kiểm tra Gmail.");
+      Navigator.pop(context);
+    } on FirebaseAuthException catch (e) {
+      _show(_mapError(e.code));
+    } finally {
+      setState(() => loading = false);
+    }
+  }
+
+  String _mapError(String code) {
+    switch (code) {
+      case 'user-not-found':
+        return "Email chưa được đăng ký";
+      case 'invalid-email':
+        return "Email không hợp lệ";
+      default:
+        return "Có lỗi xảy ra, vui lòng thử lại";
+    }
+  }
+
+  void _show(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
+        title: const Text("Quên mật khẩu"),
         backgroundColor: Colors.white,
+        foregroundColor: Colors.teal,
         elevation: 0,
-        title: Text(
-          "Quên mật khẩu",
-          style: GoogleFonts.poppins(
-            fontSize: 20,
-            color: Colors.teal,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
       ),
-
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              "Nhập email để nhận liên kết đặt lại mật khẩu.",
-              style: GoogleFonts.poppins(fontSize: 14),
+              "Khôi phục mật khẩu",
+              style: GoogleFonts.poppins(
+                fontSize: 22,
+                fontWeight: FontWeight.w600,
+              ),
             ),
-
-            const SizedBox(height: 20),
+            const SizedBox(height: 8),
+            Text(
+              "Nhập email đã đăng ký. Chúng tôi sẽ gửi liên kết đặt lại mật khẩu.",
+              style: GoogleFonts.poppins(fontSize: 13),
+            ),
+            const SizedBox(height: 24),
 
             TextField(
-              controller: email,
+              controller: emailCtrl,
+              keyboardType: TextInputType.emailAddress,
               decoration: InputDecoration(
                 labelText: "Email",
                 prefixIcon: const Icon(Icons.email_outlined),
@@ -58,18 +89,19 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                 ),
               ),
             ),
-
             const SizedBox(height: 24),
 
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: _sendEmail,
+                onPressed: loading ? null : _sendResetEmail,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.teal,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
-                child: const Text("Gửi yêu cầu"),
+                child: loading
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text("Gửi email khôi phục"),
               ),
             ),
           ],
