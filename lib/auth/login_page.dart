@@ -44,9 +44,10 @@ class _LoginPageState extends State<LoginPage>
       vsync: this,
     );
 
-    _bgPulse = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
-    );
+    _bgPulse = Tween<double>(
+      begin: 0,
+      end: 1,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
 
     _headerFade = Tween<double>(begin: 0, end: 1).animate(
       CurvedAnimation(
@@ -62,15 +63,13 @@ class _LoginPageState extends State<LoginPage>
       ),
     );
 
-    _cardSlide = Tween<Offset>(
-      begin: const Offset(0, 0.08),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0.2, 0.9, curve: Curves.easeOutCubic),
-      ),
-    );
+    _cardSlide = Tween<Offset>(begin: const Offset(0, 0.08), end: Offset.zero)
+        .animate(
+          CurvedAnimation(
+            parent: _controller,
+            curve: const Interval(0.2, 0.9, curve: Curves.easeOutCubic),
+          ),
+        );
 
     _buttonScale = Tween<double>(begin: 0.9, end: 1).animate(
       CurvedAnimation(
@@ -112,8 +111,7 @@ class _LoginPageState extends State<LoginPage>
     setState(() => isLoading = true);
 
     try {
-      final credential =
-          await FirebaseAuth.instance.signInWithEmailAndPassword(
+      final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: email.text.trim(),
         password: password.text.trim(),
       );
@@ -142,8 +140,9 @@ class _LoginPageState extends State<LoginPage>
       if (role == 'admin') {
         nextPage = const AdminDashboard();
       } else {
-        nextPage =
-            surveyCompleted ? const NavigationPage() : const SurveyPage();
+        nextPage = surveyCompleted
+            ? const NavigationPage()
+            : const SurveyPage();
       }
 
       Navigator.pushReplacement(
@@ -229,13 +228,19 @@ class _LoginPageState extends State<LoginPage>
                         opacity: _headerFade,
                         child: Column(
                           children: [
-                            Icon(Icons.lock_outline,
-                                size: 50, color: Colors.teal),
+                            Icon(
+                              Icons.lock_outline,
+                              size: 50,
+                              color: Colors.teal,
+                            ),
                             const SizedBox(height: 12),
-                            Text("Chào mừng trở lại",
-                                style: GoogleFonts.poppins(
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.w700)),
+                            Text(
+                              "Chào mừng trở lại",
+                              style: GoogleFonts.poppins(
+                                fontSize: 22,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -282,9 +287,7 @@ class _LoginPageState extends State<LoginPage>
             child: TextButton(
               onPressed: () => Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (_) => const ForgotPasswordPage(),
-                ),
+                MaterialPageRoute(builder: (_) => const ForgotPasswordPage()),
               ),
               child: const Text("Quên mật khẩu?"),
             ),
@@ -311,7 +314,11 @@ class _LoginPageState extends State<LoginPage>
   }
 
   Widget _input(
-      String label, TextEditingController ctrl, IconData icon, bool pass) {
+    String label,
+    TextEditingController ctrl,
+    IconData icon,
+    bool pass,
+  ) {
     return TextField(
       controller: ctrl,
       obscureText: pass ? obscure : false,
@@ -320,10 +327,8 @@ class _LoginPageState extends State<LoginPage>
         prefixIcon: Icon(icon),
         suffixIcon: pass
             ? IconButton(
-                icon: Icon(
-                    obscure ? Icons.visibility_off : Icons.visibility),
-                onPressed: () =>
-                    setState(() => obscure = !obscure),
+                icon: Icon(obscure ? Icons.visibility_off : Icons.visibility),
+                onPressed: () => setState(() => obscure = !obscure),
               )
             : null,
       ),
