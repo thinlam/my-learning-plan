@@ -1,10 +1,13 @@
 import 'ai_learning_path_model.dart';
 
-/// Mô tả profile người học (kết quả khảo sát)
+/// ===============================
+/// 👤 SURVEY PROFILE (DATA)
+/// ===============================
+/// Hồ sơ người học – kết quả khảo sát
 class SurveyProfile {
   final String grade; // "10" | "11" | "12" | "ĐH"
   final List<String> favoriteSubjects;
-  final int freeEveningsPerWeek; // số buổi rảnh
+  final int freeEveningsPerWeek; // số buổi rảnh / tuần
   final bool hasExtraClasses; // có học thêm không
   final String goal; // "trung bình" | "khá" | "giỏi" | "thi ĐH" | "thi chuyên"
 
@@ -17,75 +20,72 @@ class SurveyProfile {
   });
 }
 
-/// ❤️ Bộ luật AI – Chấm điểm và đề xuất lộ trình
+/// ===============================
+/// ❤️ AI RULES – GỢI Ý LỘ TRÌNH
+/// ===============================
 class AiRules {
-  /// THƯ VIỆN LỘ TRÌNH MẪU
+  /// 📚 THƯ VIỆN LỘ TRÌNH MẪU
   static final List<AiLearningPath> baseLibrary = [
     AiLearningPath(
       id: 'basic_10',
       title: 'Lộ trình học đều cho khối 10',
       description:
-          'Ôn lại kiến thức nền tảng Toán – Lý – Anh, mỗi ngày 45 phút, phù hợp học sinh khối 10.',
+          'Ôn Toán – Lý – Anh, mỗi ngày ~45 phút, phù hợp học sinh khối 10.',
       lessonCount: 24,
       difficulty: 'basic',
       targetGrades: ['10'],
       focusSubjects: ['Toán', 'Lý', 'Anh'],
       recommendedHoursPerWeek: 5,
     ),
-
     AiLearningPath(
       id: 'basic_11',
       title: 'Củng cố kiến thức khối 11',
       description:
-          'Ôn tập có chọn lọc, tập trung vào các chương dễ mất gốc cho khối 11.',
+          'Ôn tập có chọn lọc các chương dễ mất gốc cho khối 11.',
       lessonCount: 26,
       difficulty: 'basic',
       targetGrades: ['11'],
       focusSubjects: ['Toán', 'Hóa', 'Anh'],
       recommendedHoursPerWeek: 6,
     ),
-
     AiLearningPath(
       id: 'grad_12A',
-      title: 'Ôn thi tốt nghiệp & Đại học khối A',
+      title: 'Ôn thi tốt nghiệp & ĐH khối A',
       description:
-          'Tập trung Toán – Lý – Hóa, kết hợp luyện đề và phân tích dạng bài.',
+          'Toán – Lý – Hóa, kết hợp luyện đề và phân tích dạng bài.',
       lessonCount: 32,
       difficulty: 'advanced',
       targetGrades: ['12'],
       focusSubjects: ['Toán', 'Lý', 'Hóa'],
       recommendedHoursPerWeek: 10,
     ),
-
     AiLearningPath(
       id: 'grad_12D',
       title: 'Ôn thi Đại học khối D',
       description:
-          'Lộ trình tăng cường môn Anh và Văn, dành cho khối 12 thi đại học khối D.',
+          'Tăng cường Văn – Anh, dành cho khối 12 thi đại học khối D.',
       lessonCount: 30,
       difficulty: 'advanced',
       targetGrades: ['12'],
       focusSubjects: ['Văn', 'Anh', 'Toán'],
       recommendedHoursPerWeek: 9,
     ),
-
     AiLearningPath(
       id: 'daily_focus',
       title: 'Học nhẹ nhưng đều mỗi ngày',
       description:
-          'Lịch học nhẹ, 30–40 phút/ngày, phù hợp học sinh bận học thêm.',
+          '30–40 phút/ngày, phù hợp học sinh bận học thêm.',
       lessonCount: 28,
       difficulty: 'intermediate',
       targetGrades: ['10', '11', '12'],
       focusSubjects: ['Toán', 'Anh'],
       recommendedHoursPerWeek: 4,
     ),
-
     AiLearningPath(
       id: 'strong_math',
       title: 'Tăng cường Toán & Tư duy logic',
       description:
-          'Dành cho học sinh muốn cải thiện hoặc nâng cao môn Toán, kèm bài tập tư duy.',
+          'Dành cho học sinh muốn cải thiện hoặc nâng cao môn Toán.',
       lessonCount: 22,
       difficulty: 'intermediate',
       targetGrades: ['10', '11', '12'],
@@ -94,26 +94,27 @@ class AiRules {
     ),
   ];
 
-  // ⬇⬇⬇ CHẤM ĐIỂM LỘ TRÌNH CHO USER
-
+  /// ===============================
+  /// 🧠 TÍNH ĐIỂM 1 LỘ TRÌNH
+  /// ===============================
   static int calculateScore(AiLearningPath path, SurveyProfile profile) {
     int score = 0;
 
-    // 1️⃣ Khớp khối – weight mạnh nhất
+    // 1️⃣ Khớp khối (quan trọng nhất)
     if (path.targetGrades.contains(profile.grade)) {
       score += 30;
-    } else if (path.targetGrades.contains('10') ||
-        path.targetGrades.contains('11') ||
-        path.targetGrades.contains('12')) {
+    } else {
       score += 5;
     }
 
     // 2️⃣ Khớp môn yêu thích
-    for (final s in profile.favoriteSubjects) {
-      if (path.focusSubjects.contains(s)) score += 12;
+    for (final subject in profile.favoriteSubjects) {
+      if (path.focusSubjects.contains(subject)) {
+        score += 12;
+      }
     }
 
-    // 3️⃣ Dựa vào mục tiêu
+    // 3️⃣ Mục tiêu học
     switch (profile.goal.toLowerCase()) {
       case 'thi đh':
       case 'thi đại học':
@@ -141,39 +142,33 @@ class AiRules {
         break;
     }
 
-    // 4️⃣ Lịch học rảnh
+    // 4️⃣ Thời gian rảnh
     if (profile.freeEveningsPerWeek <= 2) {
-      // rảnh ít
       if (path.recommendedHoursPerWeek <= 5) {
         score += 12;
       } else {
         score -= 6;
       }
     } else if (profile.freeEveningsPerWeek >= 4) {
-      // rảnh nhiều
       if (path.recommendedHoursPerWeek >= 6) score += 8;
     }
 
-    // 5️⃣ Có học thêm?
-    if (profile.hasExtraClasses) {
-      if (path.recommendedHoursPerWeek <= 7) {
-        score += 8;
-      } else {
-        score -= 6;
-      }
+    // 5️⃣ Có học thêm
+    if (profile.hasExtraClasses && path.recommendedHoursPerWeek > 7) {
+      score -= 6;
     }
 
-    // Điểm tối thiểu 0, tối đa 100+
-    if (score < 0) score = 0;
-
-    return score;
+    return score < 0 ? 0 : score;
   }
 
-  /// 📌 Gán score cho toàn bộ library
+  /// ===============================
+  /// ⭐ GỢI Ý LỘ TRÌNH (SORT DESC)
+  /// ===============================
   static List<AiLearningPath> applyRules(SurveyProfile profile) {
-    return baseLibrary.map((path) {
-      final score = calculateScore(path, profile);
-      return path.copyWith(score: score);
-    }).toList()..sort((a, b) => b.score.compareTo(a.score)); // sort giảm dần
+    return baseLibrary
+        .map((path) =>
+            path.copyWith(score: calculateScore(path, profile)))
+        .toList()
+      ..sort((a, b) => b.score.compareTo(a.score));
   }
 }

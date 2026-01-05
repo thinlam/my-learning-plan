@@ -9,7 +9,7 @@ import 'package:my_learning_plan/screen/admin/admin_dashboard.dart';
 // Pages
 import 'register_page.dart';
 import '../auth/forgot_password.dart';
-import '../screen/survey/survey_page.dart';
+import '../learning_path/page/survey_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -138,7 +138,8 @@ class _LoginPageState extends State<LoginPage>
       // 3) Điều hướng
       Widget nextPage = role == "admin"
           ? const AdminDashboard()
-          : const SurveyPage();
+          : SurveyPage();
+
 
       Navigator.pushReplacement(
         context,
