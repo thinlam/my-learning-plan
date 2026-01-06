@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:my_learning_plan/forum/ui/forum_ui.dart';
 
 // Import các màn hình trong app
 import 'home_page.dart';
@@ -22,50 +23,21 @@ class NavigationPage extends StatefulWidget {
   State<NavigationPage> createState() => _NavigationPageState();
 }
 
-class _NavigationPageState extends State<NavigationPage>
-    with SingleTickerProviderStateMixin {
+class _NavigationPageState extends State<NavigationPage> {
   late int _currentIndex;
-
-  late AnimationController _controller;
-  late Animation<double> _fade;
-  late Animation<Offset> _slide;
 
   @override
   void initState() {
     super.initState();
-
-    // ⭐ LẤY initialIndex TỪ WIDGET
     _currentIndex = widget.initialIndex;
-
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 350),
-    );
-
-    _fade = Tween(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
-
-    _slide = Tween(
-      begin: const Offset(0, 0.05),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
-
-    _controller.forward();
   }
 
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  // ⭐ DANH SÁCH MÀN HÌNH
-  late final List<Widget> _screens = const [
+  // ⭐ DANH SÁCH MÀN HÌNH (phải khớp đúng thứ tự với bottom bar)
+  final List<Widget> _screens = const [
     HomeScreen(),
     PathSelectionPage(),
     ProgressPage(),
+    ForumUI(),
     NotificationsPage(),
     ProfilePage(),
   ];
@@ -73,10 +45,24 @@ class _NavigationPageState extends State<NavigationPage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: FadeTransition(
-        opacity: _fade,
-        child: SlideTransition(
-          position: _slide,
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 300),
+        switchInCurve: Curves.easeOut,
+        switchOutCurve: Curves.easeIn,
+        transitionBuilder: (child, animation) {
+          final fade = Tween<double>(begin: 0, end: 1).animate(animation);
+          final slide = Tween<Offset>(
+            begin: const Offset(0, 0.05),
+            end: Offset.zero,
+          ).animate(animation);
+
+          return FadeTransition(
+            opacity: fade,
+            child: SlideTransition(position: slide, child: child),
+          );
+        },
+        child: KeyedSubtree(
+          key: ValueKey(_currentIndex),
           child: _screens[_currentIndex],
         ),
       ),
@@ -84,7 +70,7 @@ class _NavigationPageState extends State<NavigationPage>
     );
   }
 
-  // ⭐ BOTTOM NAVIGATION BAR
+  // ⭐ BOTTOM NAVIGATION BAR (6 tab thôi)
   Widget _buildBottomBar() {
     return NavigationBar(
       height: 68,
@@ -92,34 +78,41 @@ class _NavigationPageState extends State<NavigationPage>
       indicatorColor: Colors.teal.withOpacity(0.15),
       labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
       onDestinationSelected: (i) {
-        setState(() {
-          _currentIndex = i;
-          _controller.forward(from: 0);
-        });
+        if (i == _currentIndex) return;
+        setState(() => _currentIndex = i);
       },
-      destinations: [
-        _navItem(Icons.home_outlined, Icons.home, "Trang chủ"),
-        _navItem(Icons.explore_outlined, Icons.explore, "Khám phá"),
-        _navItem(Icons.insights_outlined, Icons.insights, "Tiến độ"),
-        _navItem(
-          Icons.notifications_outlined,
-          Icons.notifications,
-          "Thông báo",
+      destinations: const [
+        NavigationDestination(
+          icon: Icon(Icons.home_outlined),
+          selectedIcon: Icon(Icons.home, color: Colors.teal),
+          label: "Trang chủ",
         ),
-        _navItem(Icons.person_outline, Icons.person, "Cá nhân"),
+        NavigationDestination(
+          icon: Icon(Icons.explore_outlined),
+          selectedIcon: Icon(Icons.explore, color: Colors.teal),
+          label: "Khám phá",
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.insights_outlined),
+          selectedIcon: Icon(Icons.insights, color: Colors.teal),
+          label: "Tiến độ",
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.forum_outlined),
+          selectedIcon: Icon(Icons.forum, color: Colors.teal),
+          label: "Diễn đàn",
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.notifications_outlined),
+          selectedIcon: Icon(Icons.notifications, color: Colors.teal),
+          label: "Thông báo",
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.person_outline),
+          selectedIcon: Icon(Icons.person, color: Colors.teal),
+          label: "Cá nhân",
+        ),
       ],
-    );
-  }
-
-  NavigationDestination _navItem(
-    IconData icon,
-    IconData selected,
-    String label,
-  ) {
-    return NavigationDestination(
-      icon: Icon(icon),
-      selectedIcon: Icon(selected, color: Colors.teal),
-      label: label,
     );
   }
 }
