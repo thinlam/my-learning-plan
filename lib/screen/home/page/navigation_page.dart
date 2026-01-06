@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:my_learning_plan/forum/ui/forum_ui.dart';
 
 // Import các màn hình trong app
 import 'home_page.dart';
@@ -34,13 +35,14 @@ class _NavigationPageState extends State<NavigationPage> {
     _currentIndex = widget.initialIndex;
   }
 
-  // ⭐ DANH SÁCH MÀN HÌNH
-  final List<Widget> _screens = const [
-    HomeScreen(),
-    PathSelectionPage(),
-    ProgressPage(),
-    NotificationsPage(),
-    ProfilePage(),
+  // ⭐ DANH SÁCH MÀN HÌNH (BỎ const LIST)
+  final List<Widget> _screens = [
+    const HomeScreen(),
+    const PathSelectionPage(),
+    const ProgressPage(),
+    const NotificationsPage(),
+    const ProfilePage(),
+    const ForumUI(),
   ];
 
   @override
@@ -67,7 +69,7 @@ class _NavigationPageState extends State<NavigationPage> {
           );
         },
         child: KeyedSubtree(
-          key: ValueKey(_currentIndex), // ⭐ DÒNG QUAN TRỌNG
+          key: ValueKey(_currentIndex),
           child: _screens[_currentIndex],
         ),
       ),
@@ -114,6 +116,11 @@ class _NavigationPageState extends State<NavigationPage> {
           icon: Icon(Icons.person_outline),
           selectedIcon: Icon(Icons.person, color: Colors.teal),
           label: "Cá nhân",
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.forum_outlined),
+          selectedIcon: Icon(Icons.forum, color: Colors.teal),
+          label: "Diễn đàn",
         ),
       ],
     );
