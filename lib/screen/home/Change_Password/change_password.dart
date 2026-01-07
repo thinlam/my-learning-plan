@@ -15,7 +15,6 @@ class _ChangePasswordState extends State<ChangePassword> {
   final _confirmCtrl = TextEditingController();
 
   bool _loading = false;
-
   bool _obscureCurrent = true;
   bool _obscureNew = true;
   bool _obscureConfirm = true;
@@ -49,10 +48,7 @@ class _ChangePasswordState extends State<ChangePassword> {
         password: _currentCtrl.text,
       );
 
-      // 🔐 Re-auth
       await user!.reauthenticateWithCredential(cred);
-
-      // 🔄 Update password on Firebase
       await user!.updatePassword(_newCtrl.text);
 
       _show("Đổi mật khẩu thành công");
@@ -70,13 +66,11 @@ class _ChangePasswordState extends State<ChangePassword> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: Colors.grey.shade100,
-      appBar: AppBar(
-        title: const Text("Đổi mật khẩu"),
-        centerTitle: true,
-        backgroundColor: Colors.orange,
-      ),
+      appBar: AppBar(title: const Text("Đổi mật khẩu"), centerTitle: true),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -92,17 +86,16 @@ class _ChangePasswordState extends State<ChangePassword> {
             const SizedBox(height: 6),
             Text(
               "Mật khẩu mới phải đáp ứng đầy đủ các điều kiện bảo mật.",
-              style: GoogleFonts.poppins(
-                fontSize: 13,
-                color: Colors.grey.shade600,
-              ),
+              style: theme.textTheme.bodySmall,
             ),
             const SizedBox(height: 24),
 
             _card(
+              context,
               child: Column(
                 children: [
                   _passwordField(
+                    context,
                     label: "Mật khẩu hiện tại",
                     controller: _currentCtrl,
                     obscure: _obscureCurrent,
@@ -111,6 +104,7 @@ class _ChangePasswordState extends State<ChangePassword> {
                   ),
                   const SizedBox(height: 16),
                   _passwordField(
+                    context,
                     label: "Mật khẩu mới",
                     controller: _newCtrl,
                     obscure: _obscureNew,
@@ -119,6 +113,7 @@ class _ChangePasswordState extends State<ChangePassword> {
                   ),
                   const SizedBox(height: 16),
                   _passwordField(
+                    context,
                     label: "Xác nhận mật khẩu",
                     controller: _confirmCtrl,
                     obscure: _obscureConfirm,
@@ -128,7 +123,6 @@ class _ChangePasswordState extends State<ChangePassword> {
                   ),
                   const SizedBox(height: 20),
 
-                  /// Rules
                   _rule("Ít nhất 8 ký tự", hasMinLength),
                   _rule("Có chữ hoa (A-Z)", hasUpper),
                   _rule("Có chữ thường (a-z)", hasLower),
@@ -147,14 +141,15 @@ class _ChangePasswordState extends State<ChangePassword> {
               child: ElevatedButton(
                 onPressed: canSubmit ? _changePassword : null,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange,
-                  disabledBackgroundColor: Colors.orange.withOpacity(0.4),
+                  backgroundColor: theme.colorScheme.primary,
+                  disabledBackgroundColor: theme.colorScheme.primary
+                      .withOpacity(0.4),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
                 ),
                 child: _loading
-                    ? const CircularProgressIndicator(color: Colors.white)
+                    ? const CircularProgressIndicator()
                     : Text(
                         "Cập nhật mật khẩu",
                         style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
@@ -167,25 +162,32 @@ class _ChangePasswordState extends State<ChangePassword> {
     );
   }
 
-  Widget _card({required Widget child}) {
+  // ================= CARD =================
+  Widget _card(BuildContext context, {required Widget child}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
-          ),
-        ],
+        boxShadow: isDark
+            ? null
+            : [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.06),
+                  blurRadius: 12,
+                  offset: const Offset(0, 6),
+                ),
+              ],
       ),
       child: child,
     );
   }
 
-  Widget _passwordField({
+  // ================= PASSWORD FIELD =================
+  Widget _passwordField(
+    BuildContext context, {
     required String label,
     required TextEditingController controller,
     required bool obscure,
@@ -204,7 +206,7 @@ class _ChangePasswordState extends State<ChangePassword> {
           onPressed: onToggle,
         ),
         filled: true,
-        fillColor: Colors.grey.shade50,
+        fillColor: Theme.of(context).colorScheme.surface,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide.none,
@@ -213,6 +215,7 @@ class _ChangePasswordState extends State<ChangePassword> {
     );
   }
 
+  // ================= RULE =================
   Widget _rule(String text, bool ok) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 3),

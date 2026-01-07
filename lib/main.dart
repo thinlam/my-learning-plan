@@ -7,16 +7,19 @@ import 'package:provider/provider.dart';
 import 'firebase_options.dart';
 import 'auth/login_page.dart';
 import 'core/locale/locale_provider.dart';
+import 'core/theme/theme_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // ⭐ KHỞI TẠO FIREBASE
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => LocaleProvider(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => LocaleProvider()),
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+      ],
       child: const MyApp(),
     ),
   );
@@ -28,6 +31,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final locale = context.watch<LocaleProvider>().locale;
+    final theme = context.watch<ThemeProvider>();
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
@@ -47,14 +51,52 @@ class MyApp extends StatelessWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
 
+      // 🌗 THEME
+      themeMode: theme.themeMode,
+
+      /// 🌞 LIGHT THEME
       theme: ThemeData(
-        scaffoldBackgroundColor: Colors.grey.shade100,
-        primaryColor: Colors.teal,
         useMaterial3: true,
+        brightness: Brightness.light,
+        scaffoldBackgroundColor: const Color(0xFFF6F7FB),
+        cardColor: Colors.white,
+        primaryColor: Colors.teal,
+
+        listTileTheme: const ListTileThemeData(
+          iconColor: Color(0xFF6B7280),
+          textColor: Color(0xFF111827),
+        ),
+
         textTheme: GoogleFonts.poppinsTextTheme(),
       ),
 
-      home: const SplashAnimation(), // ⭐ Splash → Login
+      /// 🌑 DARK THEME — ĐEN THẬT, NỔI KHỐI
+      darkTheme: ThemeData(
+        useMaterial3: true,
+        brightness: Brightness.dark,
+
+        scaffoldBackgroundColor: const Color(0xFF121212),
+        cardColor: const Color(0xFF1E1E1E),
+        primaryColor: Colors.teal,
+
+        colorScheme: const ColorScheme.dark(
+          background: Color(0xFF121212),
+          surface: Color(0xFF1E1E1E),
+          primary: Colors.teal,
+          onBackground: Colors.white,
+          onSurface: Colors.white,
+        ),
+
+        listTileTheme: const ListTileThemeData(
+          tileColor: Color(0xFF1E1E1E),
+          iconColor: Color(0xFFB0B0B0),
+          textColor: Colors.white,
+        ),
+
+        textTheme: GoogleFonts.poppinsTextTheme(ThemeData.dark().textTheme),
+      ),
+
+      home: const SplashAnimation(),
     );
   }
 }
@@ -96,7 +138,6 @@ class _SplashAnimationState extends State<SplashAnimation>
 
     _controller.forward();
 
-    // ⭐ SAU 1.5 GIÂY → LOGIN
     Future.delayed(const Duration(milliseconds: 1500), () {
       if (!mounted) return;
       Navigator.pushReplacement(
@@ -115,7 +156,6 @@ class _SplashAnimationState extends State<SplashAnimation>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
       body: Center(
         child: FadeTransition(
           opacity: _fade,
@@ -127,7 +167,7 @@ class _SplashAnimationState extends State<SplashAnimation>
                 Icon(
                   Icons.menu_book_rounded,
                   size: 90,
-                  color: Colors.teal.shade600,
+                  color: Colors.teal.shade500,
                 ),
                 const SizedBox(height: 16),
                 Text(
@@ -135,16 +175,12 @@ class _SplashAnimationState extends State<SplashAnimation>
                   style: GoogleFonts.poppins(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
-                    color: Colors.teal.shade800,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   "Learning Made Easy",
-                  style: GoogleFonts.poppins(
-                    fontSize: 14,
-                    color: Colors.grey.shade600,
-                  ),
+                  style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey),
                 ),
               ],
             ),
