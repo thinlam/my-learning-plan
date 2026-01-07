@@ -6,16 +6,17 @@ class CommunityPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // ===== DATA GIẢ: CÁC NHÓM THEO MÔN =====
     final groups = [
-      {"name": "Nhóm Toán 12", "subject": "Toán", "members": 25},
-      {"name": "Nhóm Vật Lý 11", "subject": "Vật Lý", "members": 18},
-      {"name": "Nhóm Hóa 10", "subject": "Hóa", "members": 20},
-      {"name": "Nhóm Tiếng Anh", "subject": "Anh Văn", "members": 30},
+      {"name": "Lớp 10", "grade": "Lớp 10", "members": 120},
+      {"name": "Lớp 11", "grade": "Lớp 11", "members": 98},
+      {"name": "Lớp 12", "grade": "Lớp 12", "members": 85},
+      {"name": "Đại học", "grade": "Đại học", "members": 60},
     ];
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Cộng đồng môn học (ADMIN)")),
+      appBar: AppBar(
+        title: const Text("Cộng đồng theo lớp (ADMIN)"),
+      ),
       body: ListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: groups.length,
@@ -23,13 +24,14 @@ class CommunityPage extends StatelessWidget {
           final g = groups[i];
           return _GroupCard(
             name: g["name"] as String,
-            subject: g["subject"] as String,
             members: g["members"] as int,
             onTap: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => GroupFeedPage(groupName: g["name"] as String),
+                  builder: (_) => GroupFeedPage(
+                    grade: g["grade"] as String, // ✅ CHỈ GRADE
+                  ),
                 ),
               );
             },
@@ -42,13 +44,11 @@ class CommunityPage extends StatelessWidget {
 
 class _GroupCard extends StatelessWidget {
   final String name;
-  final String subject;
   final int members;
   final VoidCallback onTap;
 
   const _GroupCard({
     required this.name,
-    required this.subject,
     required this.members,
     required this.onTap,
   });
@@ -64,16 +64,19 @@ class _GroupCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x14000000),
+              blurRadius: 8,
+            ),
           ],
         ),
         child: Row(
           children: [
             const CircleAvatar(
               radius: 24,
-              backgroundColor: Colors.indigo,
-              child: Icon(Icons.group, color: Colors.white),
+              backgroundColor: Colors.teal,
+              child: Icon(Icons.school, color: Colors.white),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -89,8 +92,11 @@ class _GroupCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    "$members thành viên · $subject",
-                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    "$members thành viên",
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey,
+                    ),
                   ),
                 ],
               ),
