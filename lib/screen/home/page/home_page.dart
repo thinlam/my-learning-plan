@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-
-// Firebase
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-// Pages
 import 'navigation_page.dart';
 
 // Topic pages
@@ -36,14 +33,20 @@ class _HomeScreenState extends State<HomeScreen>
   void initState() {
     super.initState();
 
-    _controller =
-        AnimationController(vsync: this, duration: const Duration(milliseconds: 800));
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
 
     _fade = CurvedAnimation(parent: _controller, curve: Curves.easeOut);
-    _scale = Tween(begin: 0.94, end: 1.0)
-        .animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
-    _slide = Tween(begin: const Offset(0, 0.1), end: Offset.zero)
-        .animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+    _scale = Tween(
+      begin: 0.94,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
+    _slide = Tween(
+      begin: const Offset(0, 0.08),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
 
     _controller.forward();
   }
@@ -60,7 +63,7 @@ class _HomeScreenState extends State<HomeScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade100,
+      appBar: _buildAppBar(context),
       body: StreamBuilder<DocumentSnapshot>(
         stream: userStream,
         builder: (context, snapshot) {
@@ -69,20 +72,16 @@ class _HomeScreenState extends State<HomeScreen>
           }
 
           final data = snapshot.data!.data() as Map<String, dynamic>?;
-
           final name = data?["name"] ?? "Bạn";
           final learningPath = data?["learningPath"];
 
-          return Scaffold(
-            appBar: _buildAppBar(),
-            body: FadeTransition(
-              opacity: _fade,
-              child: ScaleTransition(
-                scale: _scale,
-                child: SlideTransition(
-                  position: _slide,
-                  child: _buildBody(name, learningPath, data),
-                ),
+          return FadeTransition(
+            opacity: _fade,
+            child: ScaleTransition(
+              scale: _scale,
+              child: SlideTransition(
+                position: _slide,
+                child: _buildBody(context, name, learningPath),
               ),
             ),
           );
@@ -91,60 +90,46 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  // ======================================================
-  // APP BAR
-  // ======================================================
-  AppBar _buildAppBar() {
-    return AppBar(
-      backgroundColor: Colors.white,
-      elevation: 0.6,
-      title: Text(
-        "StudyMate",
-        style: GoogleFonts.poppins(
-          fontWeight: FontWeight.w700,
-          color: Colors.teal.shade800,
-        ),
-      ),
-      centerTitle: false,
-    );
+  // ================= APP BAR =================
+  AppBar _buildAppBar(BuildContext context) {
+    return AppBar(title: const Text("StudyMate"), elevation: 0.4);
   }
 
-  // ======================================================
-  // BODY
-  // ======================================================
+  // ================= BODY =================
   Widget _buildBody(
+    BuildContext context,
     String name,
     Map<String, dynamic>? learningPath,
-    Map<String, dynamic>? data,
   ) {
     final hasPath = learningPath != null;
 
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
-        _hero(name),
+        _hero(context, name),
         const SizedBox(height: 20),
 
-        if (hasPath) _currentPathCard(learningPath),
+        if (hasPath) _currentPathCard(context, learningPath),
 
         const SizedBox(height: 24),
-        _quickActions(hasPath),
+        _quickActions(context, hasPath),
         const SizedBox(height: 24),
-        _featuredTopics(),
+        _featuredTopics(context),
         const SizedBox(height: 40),
       ],
     );
   }
 
-  // ======================================================
-  // HERO
-  // ======================================================
-  Widget _hero(String name) {
+  // ================= HERO =================
+  Widget _hero(BuildContext context, String name) {
     return Container(
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [Colors.teal.shade400, Colors.teal.shade700],
+          colors: [
+            Theme.of(context).colorScheme.primary,
+            Theme.of(context).colorScheme.primary.withOpacity(0.8),
+          ],
         ),
         borderRadius: BorderRadius.circular(22),
       ),
@@ -159,93 +144,67 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  // ======================================================
-  // CURRENT LEARNING PATH
-  // ======================================================
-  Widget _currentPathCard(Map<String, dynamic> path) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: _card(),
+  // ================= CURRENT PATH =================
+  Widget _currentPathCard(BuildContext context, Map<String, dynamic> path) {
+    return _card(
+      context,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             "Lộ trình hiện tại",
-            style: GoogleFonts.poppins(
-              fontWeight: FontWeight.w700,
-              fontSize: 16,
-            ),
+            style: GoogleFonts.poppins(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 6),
           Text(
             path["title"] ?? "",
-            style: GoogleFonts.poppins(fontSize: 13),
+            style: Theme.of(context).textTheme.bodySmall,
           ),
         ],
       ),
     );
   }
 
-  // ======================================================
-  // QUICK ACTIONS
-  // ======================================================
-  Widget _quickActions(bool hasPath) {
+  // ================= QUICK ACTIONS =================
+  Widget _quickActions(BuildContext context, bool hasPath) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
-        _quickItem(
-          icon: Icons.play_arrow,
-          label: "Tiếp tục",
-          enabled: hasPath,
-        ),
-        _quickItem(
-          icon: Icons.list_alt,
-          label: "Lộ trình",
-          enabled: true,
-        ),
-        _quickItem(icon: Icons.quiz, label: "Quiz"),
-        _quickItem(icon: Icons.notifications, label: "Nhắc nhở"),
+        _quickItem(context, Icons.play_arrow, "Tiếp tục", enabled: hasPath),
+        _quickItem(context, Icons.list_alt, "Lộ trình"),
+        _quickItem(context, Icons.quiz, "Quiz"),
+        _quickItem(context, Icons.notifications, "Nhắc nhở"),
       ],
     );
   }
 
-  Widget _quickItem({
-    required IconData icon,
-    required String label,
-    bool enabled = false,
+  Widget _quickItem(
+    BuildContext context,
+    IconData icon,
+    String label, {
+    bool enabled = true,
   }) {
-    return InkWell(
-      onTap: enabled
-          ? () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const NavigationPage(initialIndex: 1),
-                ),
-              );
-            }
-          : null,
-      child: Column(
-        children: [
-          CircleAvatar(
-            backgroundColor:
-                enabled ? Colors.teal.shade50 : Colors.grey.shade200,
-            child: Icon(
-              icon,
-              color: enabled ? Colors.teal : Colors.grey,
-            ),
+    return Column(
+      children: [
+        CircleAvatar(
+          backgroundColor: enabled
+              ? Theme.of(context).colorScheme.primary.withOpacity(0.15)
+              : Theme.of(context).disabledColor.withOpacity(0.2),
+          child: Icon(
+            icon,
+            color: enabled
+                ? Theme.of(context).colorScheme.primary
+                : Theme.of(context).disabledColor,
           ),
-          const SizedBox(height: 6),
-          Text(label, style: GoogleFonts.poppins(fontSize: 12)),
-        ],
-      ),
+        ),
+        const SizedBox(height: 6),
+        Text(label, style: Theme.of(context).textTheme.bodySmall),
+      ],
     );
   }
 
-  // ======================================================
-  // TOPICS
-  // ======================================================
-  Widget _featuredTopics() {
+  // ================= TOPICS =================
+  Widget _featuredTopics(BuildContext context) {
     final topics = [
       {"name": "Flutter", "page": const FlutterPage()},
       {"name": "Frontend", "page": const FrontendPage()},
@@ -267,18 +226,16 @@ class _HomeScreenState extends State<HomeScreen>
       itemBuilder: (context, i) {
         final t = topics[i];
         return InkWell(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => t["page"] as Widget),
-            );
-          },
-          child: Container(
-            decoration: _card(),
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => t["page"] as Widget),
+          ),
+          child: _card(
+            context,
             child: Center(
               child: Text(
                 t["name"] as String,
-                style: GoogleFonts.poppins(fontSize: 12),
+                style: Theme.of(context).textTheme.bodySmall,
               ),
             ),
           ),
@@ -287,18 +244,27 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  // ======================================================
-  // CARD STYLE
-  // ======================================================
-  BoxDecoration _card() => BoxDecoration(
-        color: Colors.white,
+  // ================= CARD =================
+  Widget _card(BuildContext context, {required Widget child}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.shade300.withOpacity(0.6),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      );
+        boxShadow: isDark
+            ? null
+            : [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.08),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+      ),
+      child: child,
+    );
+  }
 }
