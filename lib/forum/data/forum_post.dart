@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ForumPost {
+  final String id; // ⭐ BẮT BUỘC cho like / comment
   final String title;
   final String author;
   final String grade; // Lớp 10 | 11 | 12 | Đại học
@@ -8,6 +9,7 @@ class ForumPost {
   final DateTime createdAt;
 
   ForumPost({
+    required this.id,
     required this.title,
     required this.author,
     required this.grade,
@@ -15,13 +17,18 @@ class ForumPost {
     required this.createdAt,
   });
 
-  factory ForumPost.fromMap(Map<String, dynamic> m) {
+  /// 🔥 CÁCH DUY NHẤT DÙNG ĐỂ ĐỌC FIRESTORE
+  factory ForumPost.fromDoc(DocumentSnapshot doc) {
+    final m = doc.data() as Map<String, dynamic>;
+
     return ForumPost(
-      title: m['title'],
-      author: m['author'],
-      grade: m['grade'],
-      approved: m['approved'],
-      createdAt: (m['createdAt'] as Timestamp).toDate(),
+      id: doc.id,
+      title: m['title'] ?? '',
+      author: m['author'] ?? 'Ẩn danh',
+      grade: m['grade'] ?? '',
+      approved: m['approved'] ?? false,
+      createdAt:
+          (m['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
   }
 }
