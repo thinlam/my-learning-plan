@@ -24,17 +24,10 @@ class ForumStream {
         .map(_mapDocs);
   }
 
+  /// MAP FIRESTORE → ForumPost (ĐÃ CÓ ID)
   static List<ForumPost> _mapDocs(QuerySnapshot snap) {
-    return snap.docs.map((d) {
-      final m = d.data() as Map<String, dynamic>;
-
-      return ForumPost(
-        title: m['title'],
-        author: m['author'],
-        grade: m['grade'],
-        approved: m['approved'],
-        createdAt: (m['createdAt'] as Timestamp).toDate(),
-      );
+    return snap.docs.map((doc) {
+      return ForumPost.fromDoc(doc);
     }).toList();
   }
 }
