@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
-import 'widgets/create_post_box.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 import 'widgets/post_card.dart';
+import 'package:my_learning_plan/forum/data/forum_setting.dart';
 
 class GroupFeedPage extends StatefulWidget {
-  final String groupName;
+  final String grade;
 
-  const GroupFeedPage({super.key, required this.groupName});
+  const GroupFeedPage({super.key, required this.grade});
 
   @override
   State<GroupFeedPage> createState() => _GroupFeedPageState();
@@ -15,43 +17,33 @@ class _GroupFeedPageState extends State<GroupFeedPage>
     with SingleTickerProviderStateMixin {
   late TabController _tab;
 
-  final List<Map<String, dynamic>> posts = [
-    {
-      "author": "Giáo viên",
-      "content": "📌 Thông báo kiểm tra giữa kỳ",
-      "time": "1 giờ trước",
-      "approved": true,
-    },
-    {
-      "author": "Học sinh A",
-      "content": "Thầy ơi bài 5 em chưa hiểu",
-      "time": "30 phút trước",
-      "approved": false,
-    },
-  ];
-
   @override
   void initState() {
     super.initState();
     _tab = TabController(length: 3, vsync: this);
   }
 
-  void addPost(String text) {
-    setState(() {
-      posts.insert(0, {
-        "author": "ADMIN",
-        "content": text,
-        "time": "Vừa xong",
-        "approved": true,
-      });
-    });
+  Stream<QuerySnapshot> _approvedStream() {
+    return FirebaseFirestore.instance
+        .collection('forum_posts')
+        .where('approved', isEqualTo: true)
+        .where('grade', isEqualTo: widget.grade)
+        .snapshots();
+  }
+
+  Stream<QuerySnapshot> _pendingStream() {
+    return FirebaseFirestore.instance
+        .collection('forum_posts')
+        .where('approved', isEqualTo: false)
+        .where('grade', isEqualTo: widget.grade)
+        .snapshots();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("${widget.groupName} (ADMIN)"),
+        title: Text(widget.grade),
         bottom: TabBar(
           controller: _tab,
           tabs: const [
@@ -63,73 +55,80 @@ class _GroupFeedPageState extends State<GroupFeedPage>
       ),
       body: TabBarView(
         controller: _tab,
-        children: [_postsTab(), _pendingTab(), _settingsTab()],
+        children: [
+          _approvedTab(),
+          _pendingTab(),
+          _settingsTab(),
+        ],
       ),
     );
   }
 
-  // ===== TAB: BÀI VIẾT =====
-  Widget _postsTab() {
-    final approved = posts.where((p) => p["approved"]).toList();
+  Widget _approvedTab() {
+    return StreamBuilder<QuerySnapshot>(
+      stream: _approvedStream(),
+      builder: (_, snap) {
+        if (!snap.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-    return Column(
-      children: [
-        CreatePostBox(onPost: addPost),
-        Expanded(
-          child: ListView(
-            padding: const EdgeInsets.all(12),
-            children: approved.map((p) {
-              return PostCard(
-                author: p["author"],
-                content: p["content"],
-                time: p["time"],
-                isAdmin: true,
-              );
-            }).toList(),
-          ),
-        ),
-      ],
-    );
-  }
+        if (snap.data!.docs.isEmpty) {
+          return const Center(child: Text("Chưa có bài viết"));
+        }
 
-  // ===== TAB: CHỜ DUYỆT =====
-  Widget _pendingTab() {
-    final pending = posts.where((p) => !p["approved"]).toList();
-
-    return ListView(
-      padding: const EdgeInsets.all(12),
-      children: pending.map((p) {
-        return Card(
-          child: ListTile(
-            title: Text(p["author"]),
-            subtitle: Text(p["content"]),
-            trailing: ElevatedButton(
-              child: const Text("Duyệt"),
-              onPressed: () {
-                setState(() => p["approved"] = true);
-              },
-            ),
-          ),
+        return ListView(
+          children: snap.data!.docs.map((d) {
+            final m = d.data() as Map<String, dynamic>;
+            return PostCard(
+              author: m['author'],
+              content: m['title'],
+              time: "Đã duyệt",
+              isAdmin: true,
+            );
+          }).toList(),
         );
-      }).toList(),
+      },
     );
   }
 
-  // ===== TAB: CÀI ĐẶT =====
+  Widget _pendingTab() {
+    return StreamBuilder<QuerySnapshot>(
+      stream: _pendingStream(),
+      builder: (_, snap) {
+        if (!snap.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (snap.data!.docs.isEmpty) {
+          return const Center(
+              child: Text("Không có bài chờ duyệt"));
+        }
+
+        return ListView(
+          children: snap.data!.docs.map((d) {
+            final m = d.data() as Map<String, dynamic>;
+            return ListTile(
+              title: Text(m['author']),
+              subtitle: Text(m['title']),
+              trailing: ElevatedButton(
+                onPressed: () {
+                  d.reference.update({'approved': true});
+                },
+                child: const Text("Duyệt"),
+              ),
+            );
+          }).toList(),
+        );
+      },
+    );
+  }
+
   Widget _settingsTab() {
-    return ListView(
-      children: [
-        SwitchListTile(
-          value: true,
-          onChanged: null,
-          title: Text("Bật duyệt bài viết"),
-        ),
-        SwitchListTile(
-          value: false,
-          onChanged: null,
-          title: Text("Cho phép học sinh đăng bài"),
-        ),
-      ],
+    return SwitchListTile(
+      value: ForumSetting.requireApproval,
+      title: const Text("Bật duyệt bài"),
+      onChanged: (v) =>
+          setState(() => ForumSetting.requireApproval = v),
     );
   }
 }
