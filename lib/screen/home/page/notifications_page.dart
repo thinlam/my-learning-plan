@@ -54,15 +54,11 @@ class _NotificationsPageState extends State<NotificationsPage>
       duration: const Duration(milliseconds: 800),
     );
 
-    _fade = Tween<double>(
-      begin: 0,
-      end: 1,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
-
+    _fade = CurvedAnimation(parent: _controller, curve: Curves.easeOut);
     _slide = Tween<Offset>(
-      begin: const Offset(0, 0.1),
+      begin: const Offset(0, 0.08),
       end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+    ).animate(_fade);
 
     Future.delayed(const Duration(milliseconds: 200), () {
       if (mounted) _controller.forward();
@@ -75,84 +71,70 @@ class _NotificationsPageState extends State<NotificationsPage>
     super.dispose();
   }
 
-  // =================================================================
-  // UI
-  // =================================================================
+  // ================= UI =================
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade100,
-      appBar: _buildAppBar(),
+      appBar: AppBar(title: const Text("Thông báo")),
       body: FadeTransition(
         opacity: _fade,
-        child: SlideTransition(position: _slide, child: _buildBody()),
-      ),
-    );
-  }
-
-  AppBar _buildAppBar() {
-    return AppBar(
-      backgroundColor: Colors.white,
-      elevation: 0.6,
-      title: Text(
-        "Thông báo",
-        style: GoogleFonts.poppins(
-          fontSize: 20,
-          fontWeight: FontWeight.w700,
-          color: Colors.teal.shade800,
+        child: SlideTransition(
+          position: _slide,
+          child: ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: _notifications.length,
+            itemBuilder: (_, i) =>
+                _notificationItem(context, _notifications[i], i),
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildBody() {
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: _notifications.length,
-      itemBuilder: (_, i) => _buildNotificationItem(_notifications[i], i),
-    );
-  }
+  Widget _notificationItem(BuildContext context, Map item, int index) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-  Widget _buildNotificationItem(Map item, int index) {
     return AnimatedContainer(
       duration: Duration(milliseconds: 500 + index * 100),
       curve: Curves.easeOutBack,
       margin: const EdgeInsets.only(bottom: 14),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.shade300.withOpacity(0.4),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        boxShadow: isDark
+            ? null
+            : [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.08),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildIcon(item["icon"], item["color"]),
+          _icon(item["icon"], item["color"]),
           const SizedBox(width: 14),
-          Expanded(child: _buildText(item)),
+          Expanded(child: _text(context, item)),
         ],
       ),
     );
   }
 
-  Widget _buildIcon(IconData icon, Color color) {
+  Widget _icon(IconData icon, Color color) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
+        color: color.withOpacity(0.15),
         shape: BoxShape.circle,
       ),
       child: Icon(icon, color: color, size: 22),
     );
   }
 
-  Widget _buildText(Map item) {
+  Widget _text(BuildContext context, Map item) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -161,22 +143,17 @@ class _NotificationsPageState extends State<NotificationsPage>
           style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 4),
-        Text(
-          item["content"],
-          style: GoogleFonts.poppins(fontSize: 13, color: Colors.grey.shade700),
-        ),
+        Text(item["content"], style: Theme.of(context).textTheme.bodySmall),
         const SizedBox(height: 6),
         Row(
           children: [
-            const Icon(Icons.access_time, size: 14, color: Colors.grey),
-            const SizedBox(width: 4),
-            Text(
-              item["time"],
-              style: GoogleFonts.poppins(
-                fontSize: 12,
-                color: Colors.grey.shade600,
-              ),
+            Icon(
+              Icons.access_time,
+              size: 14,
+              color: Theme.of(context).iconTheme.color,
             ),
+            const SizedBox(width: 4),
+            Text(item["time"], style: Theme.of(context).textTheme.bodySmall),
           ],
         ),
       ],

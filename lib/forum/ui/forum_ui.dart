@@ -12,16 +12,11 @@ class ForumUI extends StatefulWidget {
 }
 
 class _ForumUIState extends State<ForumUI> {
-  static const _grades = [
-    "Tất cả",
-    "Lớp 10",
-    "Lớp 11",
-    "Lớp 12",
-    "Đại học",
-  ];
+  static const _grades = ["Tất cả", "Lớp 10", "Lớp 11", "Lớp 12", "Đại học"];
 
   String _selectedGrade = "Tất cả";
 
+  // ===== LOGIC GIỮ NGUYÊN =====
   Stream<QuerySnapshot> _postStream() {
     final col = FirebaseFirestore.instance.collection('forum_posts');
 
@@ -33,6 +28,15 @@ class _ForumUIState extends State<ForumUI> {
         .where('approved', isEqualTo: true)
         .where('grade', isEqualTo: _selectedGrade)
         .snapshots();
+  }
+
+  int _readInt(Map<String, dynamic> m, List<String> keys, {int fallback = 0}) {
+    for (final k in keys) {
+      final v = m[k];
+      if (v is int) return v;
+      if (v is num) return v.toInt();
+    }
+    return fallback;
   }
 
   @override
@@ -55,7 +59,7 @@ class _ForumUIState extends State<ForumUI> {
         children: [
           const SizedBox(height: 8),
 
-          /// FILTER
+          /// FILTER (UI đẹp)
           SizedBox(
             height: 44,
             child: ListView.separated(
@@ -65,6 +69,8 @@ class _ForumUIState extends State<ForumUI> {
               separatorBuilder: (_, __) => const SizedBox(width: 8),
               itemBuilder: (_, i) {
                 final g = _grades[i];
+                final selected = _selectedGrade == g;
+
                 return ChoiceChip(
                   label: Text(
                     g,
@@ -82,8 +88,7 @@ class _ForumUIState extends State<ForumUI> {
                     borderRadius: BorderRadius.circular(20),
                     side: BorderSide(color: Colors.grey.shade300),
                   ),
-                  onSelected: (_) =>
-                      setState(() => _selectedGrade = g),
+                  onSelected: (_) => setState(() => _selectedGrade = g),
                 );
               },
             ),
@@ -140,11 +145,181 @@ class _ForumUIState extends State<ForumUI> {
   }
 }
 
-/// ================= POST CARD =================
-class _PostCard extends StatelessWidget {
-  final ForumPost post;
+/// ================= EMPTY STATE UI =================
+class _EmptyState extends StatelessWidget {
+  final String grade;
+  const _EmptyState({required this.grade});
 
-  const _PostCard({required this.post});
+  @override
+  Widget build(BuildContext context) {
+    final text = grade == "Tất cả"
+        ? "Chưa có bài viết nào"
+        : "Chưa có bài viết cho $grade";
+
+    return Center(
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 20),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: Colors.black12),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.forum_outlined, size: 46, color: Colors.teal),
+            const SizedBox(height: 10),
+            Text(
+              text,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 6),
+            const Text(
+              "Hãy tạo bài viết đầu tiên để chia sẻ câu hỏi hoặc kinh nghiệm học tập.",
+              style: TextStyle(color: Colors.black54),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// ================= POST CARD (Like + Comment thật) =================
+class _PostCard extends StatelessWidget {
+  final String postId;
+  final ForumPost post;
+  final int likeCount;
+  final int commentCount;
+
+  const _PostCard({
+    required this.postId,
+    required this.post,
+    required this.likeCount,
+    required this.commentCount,
+  });
+
+  Future<void> _like(BuildContext context) async {
+    try {
+      final ref = FirebaseFirestore.instance
+          .collection('forum_posts')
+          .doc(postId);
+      await ref.update({'likeCount': FieldValue.increment(1)});
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Lỗi like: $e")));
+    }
+  }
+
+  Future<void> _openCommentSheet(BuildContext context) async {
+    final ctrl = TextEditingController();
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+      ),
+      builder: (ctx) {
+        return Padding(
+          padding: EdgeInsets.only(
+            left: 16,
+            right: 16,
+            top: 12,
+            bottom: MediaQuery.of(ctx).viewInsets.bottom + 12,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 44,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: Colors.black12,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+              ),
+              const SizedBox(height: 10),
+              const Text(
+                "Viết bình luận",
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: ctrl,
+                minLines: 2,
+                maxLines: 5,
+                decoration: InputDecoration(
+                  hintText: "Nhập bình luận...",
+                  filled: true,
+                  fillColor: const Color(0xFFF5F7FA),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              SizedBox(
+                width: double.infinity,
+                height: 46,
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.teal,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  onPressed: () async {
+                    final text = ctrl.text.trim();
+                    if (text.isEmpty) return;
+
+                    try {
+                      final postRef = FirebaseFirestore.instance
+                          .collection('forum_posts')
+                          .doc(postId);
+
+                      // 1) add comment
+                      await postRef.collection('comments').add({
+                        'text': text,
+                        'createdAt': FieldValue.serverTimestamp(),
+                      });
+
+                      // 2) increment comment count
+                      await postRef.update({
+                        'commentCount': FieldValue.increment(1),
+                      });
+
+                      if (ctx.mounted) Navigator.pop(ctx);
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("Đã gửi bình luận")),
+                      );
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text("Lỗi bình luận: $e")),
+                      );
+                    }
+                  },
+                  icon: const Icon(Icons.send),
+                  label: const Text(
+                    "Gửi",
+                    style: TextStyle(fontWeight: FontWeight.w900),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -398,11 +573,16 @@ class _ForumCreateUIState extends State<ForumCreateUI> {
     _grade = widget.initialGrade;
   }
 
+  @override
+  void dispose() {
+    _titleCtrl.dispose();
+    super.dispose();
+  }
+
+  // ===== LOGIC GIỮ NGUYÊN =====
   Future<void> _submit() async {
     await ForumService.createPost(
-      title: _titleCtrl.text.isEmpty
-          ? "Bài viết mới"
-          : _titleCtrl.text,
+      title: _titleCtrl.text.isEmpty ? "Bài viết mới" : _titleCtrl.text,
       grade: _grade,
     );
 
@@ -445,7 +625,7 @@ class _ForumCreateUIState extends State<ForumCreateUI> {
           ),
         ],
       ),
-      body: Padding(
+      body: ListView(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
@@ -486,9 +666,48 @@ class _ForumCreateUIState extends State<ForumCreateUI> {
                 ],
               ),
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 14),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.teal.withOpacity(.08),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: Colors.teal.withOpacity(.2)),
+            ),
+            child: const Row(
+              children: [
+                Icon(Icons.info_outline, color: Colors.teal),
+                SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    "Bài viết sẽ hiển thị sau khi admin duyệt.",
+                    style: TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
+    );
+  }
+}
+
+class _SectionCard extends StatelessWidget {
+  final Widget child;
+  const _SectionCard({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.black12),
+      ),
+      child: child,
     );
   }
 }
